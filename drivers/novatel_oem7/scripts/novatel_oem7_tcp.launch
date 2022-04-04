@@ -1,0 +1,9 @@
+<launch> 
+  <arg name="ip" default="192.168.1.150" />
+  <arg name="port" default="3001" />
+
+  <node pkg="novatel_oem7" type="novatel_oem7_tcp" name="novatel_oem7" output="log">
+    <param name="ip" value="$(arg ip)" />
+    <param name="port" value="$(arg port)" />
+  </node>
+</launch>

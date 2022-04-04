@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>cryptography_aes</name>
+  <version>1.12.0</version>
+  <description>The cryptography_aes package</description>
+  <maintainer email="sai.hideyasu@sit.ac.jp">sai_hideyasu</maintainer>
+  <license>Apache 2</license>
+
+  <buildtool_depend>autoware_build_flags</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+</package>

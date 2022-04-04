@@ -1,0 +1,124 @@
+int8 SIGNAL_STOP_LINE_NONE = 0
+int8 SIGNAL_STOP_LINE_NORMAL = 1
+int8 SIGNAL_STOP_LINE_REGULAR_TIME = 2
+
+int8 SIGNA_IMAGE_AREA_SELECT_ALL = 0
+int8 SIGNA_IMAGE_AREA_SELECT_LEFT = 1
+int8 SIGNA_IMAGE_AREA_SELECT_RIGHT = 2
+
+Header header
+uint32 id
+float32 weight
+int32 blinker
+int32 feat_proj_x
+int32 feat_proj_y
+int32 velocity_KPPlus
+int32 velocity_KPMinus
+int32 velocity_punchPlus
+int32 velocity_punchMinus
+int32 velocity_windowPlus
+int32 velocity_windowMinus
+float64 drive_stroke
+float64 brake_stroke
+#int16 mb_pedal
+int32 pause
+int32 pauseGroup
+float32 vgf_leafsize
+float32 vgf_measurement_range
+# ExtractedPosition[] signals
+int16 microbus_pedal
+int16 microbus_angle
+int8 automatic_door
+int8 signal_stop_line #手動設定の信号停止位置
+int16 oncoming_stop_line #対向車が存在した場合の停止位置およびそこからの探索射程
+int32 signal_stop_vector_correction #信号停止位置のindex補正値
+float64 signal_stop_vector_position_correction #信号停止位置の位置補正値
+int8 signal_image_area_select #画像から信号器を検出する領域指定
+float64 object_stop_line
+float64 temporary_stop_line
+float64 stop_line_adjustment
+float64 temporary_fixed_velocity
+string period_signal_time_first
+float64 period_signal_time_step_green
+float64 period_signal_time_step_yellow
+float64 period_signal_time_step_red
+int8 fusion_select
+float64 steer_correction
+float32 lookahead_ratio
+float32 minimum_lookahead_distance
+float32 lookahead_ratio_magn
+int8 steer_pid_on
+float64 ls_ndt_yaw_correction_deg
+float64 ls_gnss_yaw_correction_deg
+int32 localizer_check
+int32 accel_stroke_offset
+float64 temporary_deceleration
+float64 accel_avoidance_distance_min
+float64 stop_stroke_max
+float64 accel_stroke_max
+float64 k_accel_p_velocity
+float64 k_accel_i_velocity
+float64 k_accel_d_velocity
+float64 k_brake_p_velocity
+float64 k_brake_i_velocity
+float64 k_brake_d_velocity
+int8 in_accel_mode
+int8 in_brake_mode
+int8 use_stopper_distance
+float64 stopper_distance1
+float64 stopper_distance2
+float64 stopper_distance3
+int8 detection_use_point_cloud
+int8 detection_use_point_pillar
+int8 detection_use_mobileye
+float64 steer_limit_function_select_th
+#float64 steer_speed_limit1_left
+#float64 steer_speed_limit1_right
+#float64 steer_speed_limit2_left
+#float64 steer_speed_limit2_right
+#float64 steer_deg
+#float64 steer_deg_acc
+float64 obstacle_deceleration
+float64 lane_rule_deceleration
+float32 position_adjustment_magn
+float64 curve_rate
+float64 misalignment_with_base
+uint16 intersection_id #交差点ID SIP用
+uint8 routes_id #方路ID SIP用
+uint8 blue_arrow_flag #矢印信号を使用するか SIP用
+float64 accel_stroke_step_max #accel_strokeの最大値
+float64 accel_stroke_step_min #accel_strokeの最小値
+float64 brake_stroke_step_max #brake_strokeの最大値
+float64 brake_stroke_step_min #brake_strokeの最小値
+float64 pitch #前の経路とのpitch
+int32 mpc_prediction_horizon #mpc_followerのprediction_horizon
+int32 mpc_moving_average_number_of_times #mpc_followerのmoving_average_number_of_times
+int32 mpc_curvature_smoothing_number #mpc_followerのcurvature_smoothing_number
+float64 mpc_ctrl_period #mpc_followerの処理周期を変更（小さいほど速い） カーブ対策
+float64 mpc_wheelbase #mpc_followerのwheelbase値を変更 小さくするとカーブの追従性が上がる
+float64 mpc_steering_tau
+float64 steer_override #-100000以上ならsteerをこの値で上書き
+int8 mpc_target_input #1ならvehicle_statusのangleをtarget値にする
+int8 cmd_select #twist_rawとctrl_rawの担当ノードを選択  mpc=1 pure_pursuit=2
+geometry_msgs/Twist global_twist #globalの速度情報
+geometry_msgs/Pose travel_waypoint #この経路情報で走った際の実際の走行経路
+float32 avoid_adjustment_magn #この数値だけy値をずらしたところに対向車回避表示を出す
+int8 clothoid_move #clothoid移動の方向　1は変更　０は解除　−１は変更なし
+float32 clothoid_move_lane_length #この距離だけ経路をｙ方向にclothoidでずらす
+float32 clothoid_lenght #clothoidのｘ変更距離
+int8 auto_waypoint_change #1なら経路自動切り替えを実行
+int32 pub_light_color
+int16 steer_actual_plus     #canのステア補正値
+int16 steer_actual_plus_sub #canのステア補正値 こちらは運転手からの入力から数値を生成する
+float64 gnss_latitude #緯度
+float64 gnss_longitude #経度
+float64 gnss_height #GNSS高さ
+float64 gnss_azimuth #GNSS向き
+float32 ndt_yaw_correct_deg #NDTの向き補正
+float32 ndt_y_correct # NDTのy方向補正
+float32 gnss_yaw_correct_deg #GNSSの向き補正
+float32 gnss_y_correct # GNSSのy方向補正
+string signal_select_topic #どのトピックで信号判定を行うか？
+int8 localizer_change_trigger #localizer_smooth_transitionノードで位置角度補正をしてからlocalizerを切り替える信号判定 -1は何もしない
+int16 accel_stroke_cap #アクセル時のstorke cap
+LiesseXZB70MParam liesse #liesse用パラメーター

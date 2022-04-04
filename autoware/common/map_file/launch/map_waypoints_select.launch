@@ -1,0 +1,15 @@
+<launch>
+  <!-- 入力のグローバル経路はwaypoint_loaderを実行すれば読み込まれます -->
+
+  <arg name="outpath" default="tmp/pcd_data.pcd" /> <!--PCDファイル出力先-->
+  <arg name="distance_th" default="100.0" /> <!--各waypoint座標に対してこの数値以内のMAP座標を選出する-->
+  <arg name="start_id" default="0" /> <!--map点選別に使用するwaypointのstartID-->
+  <arg name="end_if" default="100000" /> <!--map点選別に使用するwaypointのendID-->
+
+  <node pkg="map_file" type="map_waypoints_select" name="map_waypoints_select" >
+    <param name="outpath" value="$(arg outpath)" />
+    <param name="distance_th" value="$(arg distance_th)" />
+    <param name="start_id" value="$(arg start_id)" />
+    <param name="end_id" value="$(arg end_id)" />
+  </node>
+</launch>

@@ -1,0 +1,8 @@
+<launch>
+	<node pkg="vehicle_socket" type="microbus_pseudo_can_publisher" name="microbus_pseudo_can_publisher" output="log">
+	</node>
+
+	<node pkg="vehicle_socket" type="microbus_pseudo_can_sender" name="microbus_pseudo_can_sender" output="log">
+          <remap from="/config/velocity_set_modification" to="/config/velocity_set" />
+	</node>
+</launch>

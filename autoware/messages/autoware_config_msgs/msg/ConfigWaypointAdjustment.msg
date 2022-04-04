@@ -1,0 +1,9 @@
+Header header
+int32 start_id1
+int32 start_id2
+int32 end_id1
+int32 end_id2
+float64 start_magn1
+float64 start_magn2
+float64 end_magn1
+float64 end_magn2

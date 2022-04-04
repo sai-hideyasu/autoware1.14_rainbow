@@ -1,0 +1,8 @@
+<!-- -->
+<launch>
+    <arg name="waypoint_file" default="" />
+
+    <node pkg="waypoint_maker" type="waypoint_extension" name="waypoint_extension" output="screen">
+        <param name="waypoint_file" value="$(arg waypoint_file)" />
+    </node>
+</launch>

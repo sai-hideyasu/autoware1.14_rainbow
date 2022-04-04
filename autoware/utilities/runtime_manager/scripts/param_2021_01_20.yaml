@@ -1,0 +1,703 @@
+PointGrey Spinnaker:
+  dltl: 1568000
+  fps: 60
+  height: 1080
+  width: 1440
+Velodyne HDL-32E:
+  calibration: /home/autoware/velodyne_vls/src/velodyne_pointcloud/params/32db.yaml
+Velodyne VLS-128 single:
+  calibration: /home/autoware/velodyne_vls_orig/src/velodyne_pointcloud/params/VLS-128_FS1.yaml
+astar_avoid:
+  avoid_start_velocity: 3.0
+  avoid_waypoints_velocity: 10.0
+  costmap_topic: semantics/costmap_generator/occupancy_grid
+  enable_avoidance: false
+  replan_interval: 2.0
+booted_cmds:
+  names:
+  - setup_tf
+  - vehicle_model
+  - vehicle_info
+  - vector_map
+  - tf
+  - Velodyne VLS-128 single
+  - voxel_grid_filter
+  - ndt_matching_monitor
+  - can2odom(scw)
+  - localizer_switch(scw)
+  - rviz_qs
+  - point_cloud
+  - ndt_matching
+calibration_publisher:
+  camera_frame: camera
+  camera_id: ''
+  camera_info_topic: /camera_info
+  file: ''
+  image_topic_src: /image_raw
+  projection_matrix_topic: /projection_matrix
+  publish_camera_info: true
+  publish_extrinsic_mat: true
+  register_lidar2camera_tf: true
+  target_frame: velodyne
+can2odom:
+  kmph_th: 0.1
+can2odom(scw):
+  kmph_th: 0.1
+can2odom_scw:
+  kmph_th: 0.1
+car_dpm:
+  Lambda: 10
+  group_threshold: 0.1
+  num_bins: 9
+  num_cells: 8
+  score_threshold: -0.5
+car_fusion:
+  car: true
+  dispersion: 1.0
+  max_height: 2.0
+  max_low_height: -1.0
+  min_low_height: -1.5
+  min_points: 2
+  pedestrian: false
+  sync: false
+car_kf:
+  camera_id: ''
+  carHEAD: true
+  default_lifespan: 8
+  error_estimate_covariance: 1000000.0
+  initial_lifespan: 4
+  measurement_noise_covariance: 25.0
+  noise_covariance: 1.0
+  orb_features: 2000
+  pedestrian: false
+  percentage_of_overlapping: 0.0
+  sync: false
+  use_orb: 0
+cmd_selector:
+  cmd_select: !!python/unicode '1'
+detection_qs:
+  file: ''
+estimate_to_baselink:
+  height: 68.0
+estimate_to_baselink(scw):
+  height: 68.0
+gnss(RTK)_localizer:
+  namespace1: /nmea2tfpose_RTK1
+  namespace2: /nmea2tfpose_RTK2
+  use_topic_num: !!python/unicode '2'
+  yaw_correct: 0.0
+gnss(RTK)_localizer(scw):
+  namespace1: /nmea2tfpose_RTK1
+  namespace2: /nmea2tfpose_RTK2
+  use_topic_num: !!python/unicode '2'
+  yaw_correct: 0.0
+lane_rule:
+  acceleration: 0.45
+  number_of_smoothing_count: 0
+  number_of_zeros_ahead: 0
+  number_of_zeros_behind: 0
+  stopline_search_radius: 1.0
+  use_ll2: false
+lane_select:
+  distance_threshold_neighbor_lanes: 5.0
+  lane_change_interval: 10.0
+  lane_change_target_minimum: 10.0
+  lane_change_target_ratio: 5.0
+  search_closest_waypoint_minimum_dt: 5
+  vector_length_hermite_curve: 10.0
+lane_stop:
+  traffic_light: 1
+lanelet_map:
+  file_name: ''
+localization_qs:
+  file: ''
+localizer_switch:
+  alignment_mechanism1: 0
+  alignment_mechanism2: 1
+  alignment_mechanism3: 2
+  base_link_pose_topic1: !!python/unicode '/ndt_pose'
+  base_link_pose_topic2: !!python/unicode '/RTK_gnss_pose'
+  base_link_pose_topic3: !!python/unicode '/RTK_gnss_pose'
+  estimate_twist_topic1: !!python/unicode '/ndt_estimate_twist'
+  estimate_twist_topic2: !!python/unicode '/gnss_estimate_twist'
+  estimate_twist_topic3: !!python/unicode '/gnss_estimate_twist'
+  fusion_select: 1
+  gnss_deviation_topic1: !!python/unicode '/gnss_standard_deviation'
+  gnss_deviation_topic2: !!python/unicode '/gnss_standard_deviation'
+  gnss_deviation_topic3: !!python/unicode '/gnss_standard_deviation'
+  localizer_check: 1
+  localizer_pose_topic1: !!python/unicode '/ndt_localizer_pose'
+  localizer_pose_topic2: !!python/unicode '/gnss_localizer_pose'
+  localizer_pose_topic3: !!python/unicode '/gnss_localizer_pose'
+  ndt_status_topic1: !!python/unicode '/ndt_stat'
+  ndt_status_topic2: !!python/unicode '/ndt_stat'
+  ndt_status_topic3: !!python/unicode '/ndt_stat'
+  yaw_correction1: 0.0
+  yaw_correction2: 0.0
+localizer_switch(scw):
+  alignment_mechanism1: 0
+  alignment_mechanism2: 1
+  alignment_mechanism3: 2
+  base_link_pose_topic1: !!python/unicode '/ndt_pose'
+  base_link_pose_topic2: !!python/unicode '/RTK_gnss_pose'
+  base_link_pose_topic3: !!python/unicode '/RTK_gnss_pose'
+  estimate_twist_topic1: !!python/unicode '/ndt_estimate_twist'
+  estimate_twist_topic2: !!python/unicode '/gnss_estimate_twist'
+  estimate_twist_topic3: !!python/unicode '/gnss_estimate_twist'
+  fusion_select: 0
+  gnss_deviation_topic1: !!python/unicode '/gnss_standard_deviation'
+  gnss_deviation_topic2: !!python/unicode '/gnss_standard_deviation'
+  gnss_deviation_topic3: !!python/unicode '/gnss_standard_deviation'
+  localizer_check: 0
+  localizer_pose_topic1: !!python/unicode '/ndt_localizer_pose'
+  localizer_pose_topic2: !!python/unicode '/gnss_localizer_pose'
+  localizer_pose_topic3: !!python/unicode '/gnss_localizer_pose'
+  ndt_status_topic1: !!python/unicode '/ndt_stat'
+  ndt_status_topic2: !!python/unicode '/ndt_stat'
+  ndt_status_topic3: !!python/unicode '/ndt_stat'
+  yaw_correction1: 0.0
+  yaw_correction2: -0.1
+lookahead_ratio_magn:
+  max_magn: 1.0
+  min_magn: 1.0
+lookahead_ratio_magn(scw):
+  max_magn: 1.0
+  min_magn: 1.0
+map_qs:
+  file: ''
+microbus can:
+  accel_max_i: 3000.0
+  accel_stroke_adjust_th: 15.0
+  accel_stroke_offset: 10
+  accel_stroke_step_max: 1.5
+  accel_stroke_step_min: 0.5
+  acceptable_velocity_variation: 0
+  brake_max_i1: 520.0
+  brake_max_i2: 515.0
+  brake_stroke_adjust_th: 15.0
+  brake_stroke_offset: -10
+  brake_stroke_step_max: 2.0
+  brake_stroke_step_min: 1.0
+  brake_stroke_stopping_med: -300
+  check_angular_th: 20.0
+  check_distance_th: 1.0
+  gnss_alt_limit: 0.15
+  gnss_lat_limit: 0.12
+  gnss_lon_limit: 0.12
+  gnss_yaw_limit: 0.2
+  k_accel_d_acceleration: 0.0
+  k_accel_d_distance: 0.0
+  k_accel_d_velocity: 0.1
+  k_accel_i_acceleration: 0.0
+  k_accel_i_distance: 0.0
+  k_accel_i_velocity: 0.22
+  k_accel_p_acceleration: 0.0
+  k_accel_p_distance: 0.0
+  k_accel_p_velocity: 0.12
+  k_brake_d_acceleration: 0.0
+  k_brake_d_distance: 0.0
+  k_brake_d_velocity: 0.3
+  k_brake_i_acceleration: 0.0
+  k_brake_i_distance: 0.0
+  k_brake_i_velocity: 0.63
+  k_brake_p_acceleration: 0.0
+  k_brake_p_distance: 0.0
+  k_brake_p_velocity: 0.32
+  k_steer_d_distance: 0.0
+  k_steer_i_distance: 0.0
+  k_steer_p_distance: 130.0
+  kvaser_serial: '40465'
+  lane_th_left: -2.0
+  lane_th_right: 2.0
+  ndt_gnss_angle_limit: 10.0
+  ndt_gnss_max_distance_limit: 0.5
+  ndt_gnss_min_distance_limit: 0.3
+  pedal_stroke_center: 0
+  pedal_stroke_max: 840
+  pedal_stroke_min: -360
+  steer_deg_acc_th_left: -1000.0
+  steer_deg_acc_th_right: 1000.0
+  steer_deg_th_left: -500.0
+  steer_deg_th_right: 500.0
+  steer_limit_function_select_th: 15.0
+  steer_max_i: 100.0
+  steer_speed_limit1_left: -21000.0
+  steer_speed_limit1_right: 21000.0
+  steer_speed_limit2_left: -10000.0
+  steer_speed_limit2_right: 10000.0
+  steer_value_limit1: 100.0
+  steer_value_limit2: 60.0
+  stop_stroke_max: -340
+  stopper_distance1: 30.0
+  stopper_distance2: 8.0
+  stopper_distance3: 2.0
+  use_acceleration_data: 1
+  use_lane_left: true
+  use_lane_right: true
+  use_position_checker: 1
+  use_velocity_data: 1
+  velocity_limit: 55.0
+  velocity_stop_th: 0.0
+microbus can(111scw):
+  accel_max_i: 3000.0
+  accel_stroke_adjust_th: 15.0
+  accel_stroke_offset: 10
+  accel_stroke_step_max: 1.5
+  accel_stroke_step_min: 0.5
+  acceptable_velocity_variation: 0
+  brake_max_i: 520.0
+  brake_stroke_adjust_th: 15.0
+  brake_stroke_offset: -10
+  brake_stroke_step_max: 2.0
+  brake_stroke_step_min: 1.0
+  brake_stroke_stopping_med: -300
+  check_angular_th: 20.0
+  check_distance_th: 1.1
+  gnss_alt_limit: 0.15
+  gnss_lat_limit: 0.12
+  gnss_lon_limit: 0.12
+  gnss_yaw_limit: 0.1
+  k_accel_d_acceleration: 0.0
+  k_accel_d_distance: 0.0
+  k_accel_d_velocity: 0.1
+  k_accel_i_acceleration: 0.0
+  k_accel_i_distance: 0.0
+  k_accel_i_velocity: 0.22
+  k_accel_p_acceleration: 0.12
+  k_accel_p_distance: 0.0
+  k_accel_p_velocity: 0.12
+  k_brake_d_acceleration: 0.0
+  k_brake_d_distance: 0.0
+  k_brake_d_velocity: 0.3
+  k_brake_i_acceleration: 0.0
+  k_brake_i_distance: 0.0
+  k_brake_i_velocity: 0.63
+  k_brake_p_acceleration: 0.12
+  k_brake_p_distance: 0.5
+  k_brake_p_velocity: 0.32
+  k_steer_d_distance: 0.0
+  k_steer_i_distance: 0.0
+  k_steer_p_distance: 130.0
+  kvaser_channel: !!python/unicode '1'
+  lane_th_left: -5.0
+  lane_th_right: 5.0
+  ndt_gnss_angle_limit: 10.0
+  ndt_gnss_max_distance_limit: 0.5
+  ndt_gnss_min_distance_limit: 0.3
+  pedal_stroke_center: 0
+  pedal_stroke_max: 840
+  pedal_stroke_min: -500
+  speed_limit: 55.0
+  steer_max_i: 100.0
+  steer_speed_limit1: 100.0
+  steer_speed_limit2: 75.0
+  stopper_distance1: 30.0
+  stopper_distance2: 8.0
+  stopper_distance3: 2.0
+  use_acceleration_data: 1
+  use_lane_left: false
+  use_lane_right: false
+  use_position_checker: 1
+  use_velocity_data: 1
+  velocity_limit: 55.0
+  velocity_stop_th: 0.0
+microbus can(scw):
+  accel_max_i: 3000.0
+  accel_stroke_adjust_th: 15.0
+  accel_stroke_offset: 10
+  accel_stroke_step_max: 1.5
+  accel_stroke_step_min: 0.5
+  acceptable_velocity_variation: 0
+  brake_max_i1: 520.0
+  brake_max_i2: 515.0
+  brake_stroke_adjust_th: 15.0
+  brake_stroke_offset: -10
+  brake_stroke_step_max: 2.0
+  brake_stroke_step_min: 1.0
+  brake_stroke_stopping_med: -300
+  check_angular_th: 20.0
+  check_distance_th: 1.0
+  gnss_alt_limit: 0.15
+  gnss_lat_limit: 0.12
+  gnss_lon_limit: 0.12
+  gnss_yaw_limit: 0.2
+  k_accel_d_acceleration: 0.0
+  k_accel_d_distance: 0.0
+  k_accel_d_velocity: 0.1
+  k_accel_i_acceleration: 0.0
+  k_accel_i_distance: 0.0
+  k_accel_i_velocity: 0.22
+  k_accel_p_acceleration: 0.0
+  k_accel_p_distance: 0.0
+  k_accel_p_velocity: 0.12
+  k_brake_d_acceleration: 0.0
+  k_brake_d_distance: 0.0
+  k_brake_d_velocity: 0.3
+  k_brake_i_acceleration: 0.0
+  k_brake_i_distance: 0.0
+  k_brake_i_velocity: 0.63
+  k_brake_p_acceleration: 0.0
+  k_brake_p_distance: 0.0
+  k_brake_p_velocity: 0.32
+  k_steer_d_distance: 0.0
+  k_steer_i_distance: 0.0
+  k_steer_p_distance: 130.0
+  kvaser_serial: '40465'
+  lane_th_left: -1.1
+  lane_th_right: 1.1
+  ndt_gnss_angle_limit: 10.0
+  ndt_gnss_max_distance_limit: 0.5
+  ndt_gnss_min_distance_limit: 0.3
+  pedal_stroke_center: 0
+  pedal_stroke_max: 840
+  pedal_stroke_min: -360
+  steer_deg_acc_th_left: -1000.0
+  steer_deg_acc_th_right: 1000.0
+  steer_deg_th_left: -500.0
+  steer_deg_th_right: 500.0
+  steer_limit_function_select_th: 15.0
+  steer_max_i: 100.0
+  steer_speed_limit1_left: -21000.0
+  steer_speed_limit1_right: 21000.0
+  steer_speed_limit2_left: -10000.0
+  steer_speed_limit2_right: 10000.0
+  steer_value_limit1: 100.0
+  steer_value_limit2: 60.0
+  stop_stroke_max: -340
+  stopper_distance1: 30.0
+  stopper_distance2: 8.0
+  stopper_distance3: 2.0
+  use_acceleration_data: 1
+  use_lane_left: true
+  use_lane_right: true
+  use_position_checker: 1
+  use_velocity_data: 1
+  velocity_limit: 55.0
+  velocity_stop_th: 0.0
+microbus_pseudo_can_publisher:
+  time_step_ms: 0.01
+  use_velocity_flag: 1
+  velocity_mps: 1.0
+microbus_pseudo_can_publisher(scw):
+  time_step_ms: 0.05
+  use_velocity_flag: 1
+  velocity_mps: 10.0
+mileage_publisher:
+  use_velocity: 0
+mission_planning_qs:
+  file: ''
+motion_planning_qs:
+  file: ''
+mpc_follower:
+  admisible_position_error: 5.0
+  admisible_yaw_error_deg: 90.0
+  ctrl_period: 0.01
+  curvature_smoothing_num: 35
+  delay_compensation_time: 0.0
+  enable_path_smoothing: true
+  mpc_prediction_horizon: 70
+  mpc_prediction_sampling_time: 0.1
+  mpc_weight_heading_error: 0.0
+  mpc_weight_heading_error_squared_vel_coeff: 0.3
+  mpc_weight_lat_error: 0.1
+  mpc_weight_lat_jerk: 0.0
+  mpc_weight_steering_input: 1.0
+  mpc_weight_steering_input_squared_vel_coeff: 0.25
+  mpc_weight_terminal_heading_error: 0.1
+  mpc_weight_terminal_lat_error: 10.0
+  mpc_zero_ff_steer_deg: 2.0
+  path_filter_moving_ave_num: 35
+  path_smoothing_times: 1
+  qp_solver_type: !!python/unicode 'unconstraint_fast'
+  qpoases_max_iter: 500
+  show_debug_info: false
+  steer_lim_deg: 35.0
+  steering_lpf_cutoff_hz: 3.0
+  vehicle_model_steer_tau: 0.6
+  vehicle_model_type: !!python/unicode 'kinematics'
+  vehicle_model_wheelbase: 3.935
+ndt_matching:
+  error_threshold: 1.0
+  get_height: true
+  imu_topic: !!python/unicode '/aaa'
+  imu_upside_down: false
+  init_pos_gnss: 0
+  max_iterations: 30
+  method_type: 2
+  output_log_data: false
+  pitch: 0.0
+  resolution: 1.65
+  roll: 0.0
+  step_size: 0.1
+  sync: false
+  trans_epsilon: 0.01
+  use_imu: true
+  use_odom: false
+  use_predict_pose: 1
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+  z: 0.0
+ndt_matching_monitor:
+  budget: 20
+  cpu_chks:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  fatal_time_threshold: 2.0
+  iteration_threshold_stop: 32
+  iteration_threshold_warn: 10
+  min_stable_samples: 30
+  nice: 0
+  period: 100
+  policy: !!python/unicode 'FIFO'
+  prio: 99
+  real_time: false
+  score_threshold_delta: 14.0
+nmea2tfpose_RTK_1:
+  name_space: true
+  nmea_topic: !!python/unicode '/nmea_sentence'
+  plane: !!python/unicode '9'
+nmea2tfpose_RTK_2:
+  name_space: true
+  nmea_topic: !!python/unicode '/novatel_oem7_2/nmea_sentence'
+  plane: !!python/unicode '9'
+nmea2tfpose_RTK_2(scw):
+  name_space: true
+  nmea_topic: !!python/unicode '/novatel_oem7_2/nmea_sentence'
+  plane: !!python/unicode '9'
+novatel_oem7_1:
+  baud: !!python/unicode '115200'
+  port: /dev/ttyUSB0
+novatel_oem7_tcp1:
+  ip: 192.168.1.150
+novatel_oem7_tcp2:
+  ip: 192.168.1.151
+novatel_oem7_tcp2(scw):
+  ip: 192.168.1.151
+pcd_binarizer:
+  path_pcd_binarizer: ''
+  point_type: !!python/unicode 'PointXYZ'
+pcd_filter:
+  leaf_size: 0.8
+  path_pcd_filter: /home/autoware/Downloads/lio_sam/cloudGlobal.pcd,/home/autoware/Downloads/lio_sam/cloudSurf.pcd,/home/autoware/Downloads/lio_sam/cloudCorner.pcd,/home/autoware/Downloads/lio_sam/transformations.pcd,/home/autoware/Downloads/lio_sam/trajectory.pcd
+  point_type: !!python/unicode 'PointXYZ'
+pedestrian_dpm:
+  Lambda: 10
+  group_threshold: 0.3
+  num_bins: 9
+  num_cells: 8
+  score_threshold: 0.6
+pedestrian_fusion:
+  dispersion: 1.0
+  max_height: 2.0
+  max_low_height: -1.0
+  min_low_height: -1.5
+  min_points: 2
+pedestrian_kf:
+  default_lifespan: 8
+  error_estimate_covariance: 1000000.0
+  initial_lifespan: 4
+  measurement_noise_covariance: 25.0
+  noise_covariance: 1.0
+  orb_features: 2000
+  percentage_of_overlapping: 0.0
+  use_orb: 0
+play_rosbag_play:
+  file: /home/autoware/load_data/okabe/autoware-20200721155705.bag
+  rate: ''
+  repeat: true
+  start: 0
+point_cloud:
+  path_area_list: None
+  path_pcd: /home/autoware/load_data/okabe/pcd/old/0.50_Lzi1_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_Lzi2_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_eki_usiro_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_tyokusen2_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_tyokusen1_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_soto4_rot.pcd,/home/autoware/load_data/okabe/pcd/old/0.50_soto3_rot.pcd
+  scene_num: noupdate
+points_image:
+  camera_id: ''
+  sync: false
+pure_pursuit:
+  add_virtual_end_waypoints: false
+  displacement_threshold: 0.0
+  is_linear_interpolation: true
+  lookahead_distance: 4.0
+  lookahead_ratio: 2.0
+  minimum_lookahead_distance: 7.0
+  param_flag: 0
+  publishes_for_steering_robot: true
+  relative_angle_threshold: 0
+  velocity: 5.0
+sensing_qs:
+  file: ''
+setup_tf:
+  frame_id: /base_link
+  localizer_cmd_param: /velodyne
+  localizer_rosparam: velodyne
+  period_in_ms: 10
+  pitch: 0.0
+  roll: 0.0
+  x: 3.35
+  y: 0.0
+  yaw: 0.0
+  z: 2.7
+tf:
+  file: /home/autoware/saiko_car_ware_ai114/src/autoware/utilities_scw114/runtime_manager/scripts/launch_files/map_to_world.launch
+twist_filter:
+  lateral_accel_limit: 5.0
+  lateral_jerk_limit: 5.0
+  lowpass_gain_angular_z: 0.0
+  lowpass_gain_linear_x: 0.0
+  lowpass_gain_steering_angle: 0.0
+  use_decision_maker: false
+vector_map:
+  path_vec: /home/autoware/load_data/okabe/ADASmap3/ADASmap/vector.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/point.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/lane.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/idx.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/stopline.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/poledata.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/signaldata.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/pole.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/whiteline.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/roadedge.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/node.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/curb.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/crosswalk.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/dtlane.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/line.csv,/home/autoware/load_data/okabe/ADASmap3/ADASmap/area.csv
+vehicle_info:
+  info_path: /home/autoware/saiko_car_ware_ai114/src/autoware/visualization_scw114/liesse_model/param/liesse_XZB70M.yaml
+vehicle_model:
+  model_path: /home/autoware/saiko_car_ware_ai114/install/liesse_model/share/liesse_model/urdf/liesse_model.urdf
+vel_pose_connect:
+  sim_mode: false
+  topic_pose_stamped: !!python/unicode '/ndt_pose'
+  topic_twist_stamped: /estimate_twist
+vel_pose_diff_checker:
+  comparison_window_size_sec: 1.0
+  diff_angle_median_threshold_rad: 0.05
+  diff_angle_threshold_rad: 0.1
+  diff_position_median_threshold_meter: 0.5
+  diff_position_threshold_meter: 1.0
+  input_pose_name: !!python/unicode '/ndt_pose'
+  input_twist_name: !!python/unicode '/vehicle/twist'
+  loop_rate_hz: 10.0
+  moving_median_window_size_sec: 2.0
+  topic_timeout_sec: 0.3
+velocity_set:
+  deceleration_obstacle: 0.7
+  deceleration_range: 0.0
+  deceleration_stopline: 0.8
+  detection_height_bottom: -1.5
+  detection_height_top: 0.1
+  detection_range: 0.8
+  enable_multiple_crosswalk_detection: false
+  points_topic: points_no_ground
+  stop_distance_obstacle: 7.0
+  stop_distance_stopline: 5.0
+  temporal_waypoints_size: 150.0
+  threshold_points: 8
+  use_crosswalk_detection: false
+  use_ll2: false
+  velocity_change_limit: 7.0
+velocity_set111:
+  deceleration_obstacle: 0.7
+  deceleration_range: 0
+  deceleration_stopline: 0.8
+  detection_height_bottom: -1.5
+  detection_height_top: 0.1
+  detection_range: 0.8
+  enable_multiple_crosswalk_detection: false
+  points_topic: points_no_ground
+  stop_distance_obstacle: 7.0
+  stop_distance_stopline: 5.0
+  temporal_waypoints_size: 100.0
+  threshold_points: 8
+  use_crosswalk_detection: false
+  velocity_change_limit: 5.0
+velocity_set111scw:
+  deceleration_obstacle: 0.7
+  deceleration_range: 0.0
+  deceleration_stopline: 0.8
+  detection_height_bottom: -1.5
+  detection_height_top: 0.1
+  detection_range: 0.8
+  enable_multiple_crosswalk_detection: false
+  points_topic: points_no_ground
+  stop_distance_obstacle: 7.0
+  stop_distance_stopline: 5.0
+  temporal_waypoints_size: 100.0
+  threshold_points: 8
+  use_crosswalk_detection: false
+  use_ll2: false
+  velocity_change_limit: 5.0
+virtual_scan_image:
+  camera_id: ''
+  sync: false
+voxel_grid_filter:
+  measurement_range: 100
+  points_topic: !!python/unicode '/points_raw'
+  sync: false
+  voxel_leaf_size: 3.0
+waypoint_file_move:
+  base_id: 66
+  end_id: 120
+  first_id: 66
+  input_file_name: /home/autoware/load_data/okabe/tyokusen_kensyo/go.csv
+  output_file_name: /home/autoware/load_data/okabe/tyokusen_kensyo/go_move_seimon.csv
+waypoint_loader:
+  accel_limit: 0.5
+  braking_distance: 5
+  decel_limit: 0.3
+  end_point_offset: 1
+  load_csv: true
+  multi_lane_csv: /home/autoware/load_data/okabe/liesse_rotari_A_backbase/2020_12_16_new_create.csv
+  overwrite_vmax_mode: false
+  radius_min: 6.0
+  radius_thresh: 20.0
+  realtime_tuning_mode: false
+  replan_curve_mode: false
+  replan_endpoint_mode: true
+  replanning_mode: false
+  resample_interval: 1.0
+  resample_mode: true
+  use_decision_maker: false
+  velocity_max: 20.0
+  velocity_min: 4.0
+  velocity_offset: 4
+waypoint_loader_show_id:
+  accel_limit: 0.5
+  braking_distance: 5
+  decel_limit: 0.3
+  end_point_offset: 1
+  load_csv: true
+  multi_lane_csv: /home/autoware/load_data/okabe/liesse_rotari_A_backbase/2020_12_16_new_create.csv
+  overwrite_vmax_mode: false
+  radius_min: 6.0
+  radius_thresh: 20.0
+  realtime_tuning_mode: false
+  replan_curve_mode: false
+  replan_endpoint_mode: true
+  replanning_mode: false
+  resample_interval: 1.0
+  resample_mode: true
+  use_decision_maker: false
+  velocity_max: 20.0
+  velocity_min: 4.0
+  velocity_offset: 4
+waypoint_loader_show_id(scw):
+  accel_limit: 0.5
+  braking_distance: 5
+  decel_limit: 0.3
+  end_point_offset: 1
+  load_csv: true
+  multi_lane_csv: /home/autoware/load_data/okabe/tyokusen_kensyo/go.csv
+  overwrite_vmax_mode: false
+  radius_min: 6.0
+  radius_thresh: 20.0
+  realtime_tuning_mode: false
+  replan_curve_mode: false
+  replan_endpoint_mode: true
+  replanning_mode: false
+  resample_interval: 1.0
+  resample_mode: true
+  use_decision_maker: false
+  velocity_max: 20.0
+  velocity_min: 4.0
+  velocity_offset: 4
+waypoint_saver:
+  input_type: 0
+  interval: 1.0
+  lane_topic: !!python/unicode '/lane_waypoints_array'
+  save_filename: /tmp/saved_waypoints.csv
+  save_velocity: true

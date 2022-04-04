@@ -1,0 +1,8 @@
+Header header
+float32 search_distance
+float32 deceleration
+int32 number_of_zeros_ahead
+int32 number_of_zeros_behind
+float64 stop_speed_threshold
+float64 fixed_velocity
+float64 velocity_limit

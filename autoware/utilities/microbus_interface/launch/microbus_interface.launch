@@ -1,0 +1,7 @@
+<launch>
+	<arg name="use_accel_intervention" default="0"/>
+
+	<node pkg="microbus_interface" type="microbus_interface" name="microbus_interface" output="log">
+		<param name="use_accel_intervention" value="$(arg use_accel_intervention)"/>
+	</node>
+</launch>

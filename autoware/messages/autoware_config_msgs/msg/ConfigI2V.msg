@@ -1,0 +1,2 @@
+Header header
+float64 red_time_sec #赤信号までの時間がこの時間以下になったら赤信号を出す

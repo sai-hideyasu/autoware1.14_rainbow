@@ -1,0 +1,10 @@
+Header header
+float64 lat_std_dev
+float64 lon_std_dev
+float64 alt_std_dev
+float64 north_velocity_std_dev
+float64 east_velocity_std_dev
+float64 up_velocity_std_dev
+float64 roll_std_dev
+float64 pitch_std_dev
+float64 azimuth_std_dev

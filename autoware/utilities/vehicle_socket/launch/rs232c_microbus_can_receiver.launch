@@ -1,0 +1,7 @@
+<launch> 
+  <arg name="port" default="/dev/ttyUSB3"/>
+
+  <node pkg="vehicle_socket" type="rs232c_microbus_can_receiver" name="rs232c_microbus_can_receiver" output="screen">
+    <param name="port" value="$(arg port)" />
+  </node>
+</launch>

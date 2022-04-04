@@ -1,0 +1,81 @@
+<launch>
+  <arg name="x" default="3.35"/>
+  <arg name="y" default="0.0"/>
+  <arg name="z" default="2.7"/>
+  <arg name="yaw" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="frame_id" default="base_link"/>
+  <arg name="child_frame_id" default="velodyne"/>
+  <arg name="period_in_ms" default="10"/>
+
+  <param name="/tf_x" value="$(arg x)"/>
+  <param name="/tf_y" value="$(arg y)"/>
+  <param name="/tf_z" value="$(arg z)"/>
+  <param name="/tf_yaw" value="$(arg yaw)"/>
+  <param name="/tf_pitch" value="$(arg pitch)"/>
+  <param name="/tf_roll" value="$(arg roll)"/>
+
+//base_link_to_gnss antena
+  <param name="/gx1" value="0.0"/>
+  <param name="/gy1" value="0.0"/>
+  <param name="/gz1" value="2.4"/>
+  <param name="/gyaw1" value="0.0"/>
+  <param name="/gpitch1" value="0.0"/>
+  <param name="/groll1" value="0.0"/>
+
+  <!-- param name="/gx2" value="0.6382821547"/ -->
+  <!-- param name="/gy2" value="-0.4094757795"/ -->
+  <!-- param name="/gz2" value="2.7357697239"/ -->
+  <!-- param name="/gyaw2" value="-0.0016904079"/ -->
+  <!-- param name="/gpitch2" value="-0.0006652615"/ -->
+  <!-- param name="/groll2" value="-0.0010026966"/ -->
+
+  <!-- param name="/gx2" value="1.01"/ -->
+  <!-- param name="/gy2" value="-0.23"/ -->
+  <!-- param name="/gz2" value="2.62"/ -->
+  <!-- param name="/gyaw2" value="-0.0016904079"/ -->
+  <!-- param name="/gpitch2" value="-0.0006652615"/ -->
+  <!-- param name="/groll2" value="-0.0010026966"/ -->
+
+  <!-- 2020/12/16 liesse hund keisoku -->
+  <param name="/gx2" value="1.695"/>
+  <param name="/gy2" value="0.0"/>
+  <param name="/gz2" value="2.64"/>
+  <param name="/gyaw2" value="0.0"/>
+  <param name="/gpitch2" value="0.0"/>
+  <param name="/groll2" value="0.0"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_128" args="3.35 0.0 2.70 0.0 0.0 0.0 base_link velodyne8 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne1" args="-1.12959 -0.0305311 0.169577 3.13041 -3.13411 -3.10954 velodyne8 velodyne1 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne2" args="-1.12919 -0.0048965 0.270249 0.0218984 -0.00877671 -0.000585655 velodyne8 velodyne2 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne3" args="-1.12659 -0.0245375 0.44283 1.58257 3.13924 -3.13566 velodyne8 velodyne3 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne4" args="0.939194 1.06834 -1.68488 0.76443 -0.0227752 -0.0242478 velodyne8 velodyne4 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne5" args="0.912343 -1.04657 -1.66464 2.36469 3.13097 -3.12071 velodyne8 velodyne5 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne6" args="-5.24919 0.872961 -1.66232 2.29892 0.0302726 -0.0229605 velodyne8 velodyne6 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne7" args="-5.26547 -1.18868 -1.71513 0.853431 3.11806 -3.11745 velodyne8 velodyne7 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne9" args="-4.87014 -0.0623637 -0.138453 3.13484 0.00145343 0.00178374 velodyne8 velodyne9 10"/>
+
+  <!-- node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 -0.0025 0.0 0.0 base_link me_viz 10"/ -->
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 -0.026 0.0 0.0 base_link me_viz 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_front_base_link" args="6.18 0.0 0.0 0.0 0.0 0.0 base_link front_base_link 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.165 -0.905 -1.5875 0.0 -1.4510 velodyne camera 10"/>
+
+  <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.230 -0.905 -1.570795 0.0 -1.466075333 velodyne camera 10"/ -->
+
+  <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.301 -0.905 -1.5875 -0.035 -1.500 velodyne camera 10"/ -->
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer" args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg frame_id) $(arg child_frame_id) $(arg period_in_ms)"/>
+
+</launch>

@@ -1,0 +1,9 @@
+Header header
+float64 nmea_latitude
+float64 nmea_longitude
+float64 nmea_height
+float64 fix_latitude_rad
+float64 fix_longitude_rad
+float64 roll_rad
+float64 pitch_rad
+float64 azimuth_rad

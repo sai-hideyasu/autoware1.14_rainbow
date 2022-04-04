@@ -1,0 +1,3 @@
+Header header
+bool localizer_stat
+float64 localizer_distance

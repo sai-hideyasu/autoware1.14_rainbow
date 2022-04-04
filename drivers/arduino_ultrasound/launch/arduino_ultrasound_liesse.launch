@@ -1,0 +1,248 @@
+<launch> 
+
+<!--
+2 左後
+3 左最後
+4 後左
+5 後中央
+6 後右
+7 前左
+8 前中央
+9 前右
+10 右最前
+11 右前
+14 右後
+15 右最後
+-->
+
+
+  <arg name="port" default="/dev/ttyACM0"/>
+  <arg name="baud" default="115200" />
+
+  <arg name="dev_count" default="12"/>
+
+  <!-- 前左 -->
+  <arg name="dev1" default="7"/>
+  <arg name="posx1" default="5.83"/>
+  <arg name="posy1" default="1.035"/>
+  <arg name="posz1" default="0.5"/>
+  <arg name="yaw1" default="0.78539"/>
+  <arg name="max_range1" default="0.6"/>
+  <arg name="tf_name1" default="us_front_left"/>
+
+  <!-- 前中央 -->
+  <arg name="dev2" default="8"/>
+  <arg name="posx2" default="5.83"/>
+  <arg name="posy2" default="0"/>
+  <arg name="posz2" default="0.5"/>
+  <arg name="yaw2" default="0"/>
+  <arg name="max_range2" default="0.6"/>
+  <arg name="tf_name2" default="us_front_center"/>
+
+  <!-- 前右 -->
+  <arg name="dev3" default="9"/>
+  <arg name="posx3" default="5.83"/>
+  <arg name="posy3" default="-1.035"/>
+  <arg name="posz3" default="0.5"/>
+  <arg name="yaw3" default="-0.78539"/>
+  <arg name="max_range3" default="0.6"/>
+  <arg name="tf_name3" default="us_front_right"/>
+
+  <!-- 後左 -->
+  <arg name="dev4" default="4"/>
+  <arg name="posx4" default="-2.53"/>
+  <arg name="posy4" default="0.62"/>
+  <arg name="posz4" default="0.5"/>
+  <arg name="yaw4" default="3.14159"/>
+  <arg name="max_range4" default="0.6"/>
+  <arg name="tf_name4" default="us_back_left"/>
+
+  <!-- 後中央 -->
+  <arg name="dev5" default="5"/>
+  <arg name="posx5" default="-2.53"/>
+  <arg name="posy5" default="0.0"/>
+  <arg name="posz5" default="0.5"/>
+  <arg name="yaw5" default="3.14159"/>
+  <arg name="max_range5" default="0.6"/>
+  <arg name="tf_name5" default="us_back_center"/>
+
+  <!-- 後右 -->
+  <arg name="dev6" default="6"/>
+  <arg name="posx6" default="-2.53"/>
+  <arg name="posy6" default="-0.62"/>
+  <arg name="posz6" default="0.5"/>
+  <arg name="yaw6" default="3.14159"/>
+  <arg name="max_range6" default="0.6"/>
+  <arg name="tf_name6" default="us_back_right"/>
+
+  <!-- 左最後 -->
+  <arg name="dev7" default="3"/>
+  <arg name="posx7" default="-2.48"/>
+  <arg name="posy7" default="1.04"/>
+  <arg name="posz7" default="0.5"/>
+  <arg name="yaw7" default="1.57079"/>
+  <arg name="max_range7" default="0.6"/>
+  <arg name="tf_name7" default="us_left_back"/>
+
+  <!-- 左後 -->
+  <arg name="dev8" default="2"/>
+  <arg name="posx8" default="-1.175"/>
+  <arg name="posy8" default="1.04"/>
+  <arg name="posz8" default="0.5"/>
+  <arg name="yaw8" default="1.57079"/>
+  <arg name="max_range8" default="0.6"/>
+  <arg name="tf_name8" default="us_left_shallowback"/>
+
+  <!-- 右最前 -->
+  <arg name="dev9" default="10"/>
+  <arg name="posx9" default="5.78"/>
+  <arg name="posy9" default="-1.04"/>
+  <arg name="posz9" default="0.5"/>
+  <arg name="yaw9" default="-1.57079"/>
+  <arg name="max_range9" default="0.6"/>
+  <arg name="tf_name9" default="us_rigth_front"/>
+
+  <!-- 右前 -->
+  <arg name="dev10" default="11"/>
+  <arg name="posx10" default="5.05"/>
+  <arg name="posy10" default="-1.04"/>
+  <arg name="posz10" default="0.5"/>
+  <arg name="yaw10" default="-1.57079"/>
+  <arg name="max_range10" default="0.6"/>
+  <arg name="tf_name10" default="us_right_shallowfront"/>
+
+  <!-- 右後 -->
+  <arg name="dev11" default="14"/>
+  <arg name="posx11" default="-1.295"/>
+  <arg name="posy11" default="-1.04"/>
+  <arg name="posz11" default="0.5"/>
+  <arg name="yaw11" default="-1.57079"/>
+  <arg name="max_range11" default="0.6"/>
+  <arg name="tf_name11" default="us_right_shallowback"/>
+
+  <!-- 右最後ろ -->
+  <arg name="dev12" default="15"/>
+  <arg name="posx12" default="-2.47"/>
+  <arg name="posy12" default="-1.04"/>
+  <arg name="posz12" default="0.5"/>
+  <arg name="yaw12" default="-1.57079"/>
+  <arg name="max_range12" default="0.6"/>
+  <arg name="tf_name12" default="us_right_back"/>
+
+
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_front_left"   args="$(arg posx1) $(arg posy1) $(arg posz1) $(arg yaw1) 0.0 0.0 base_link $(arg tf_name1) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_front_center" args="$(arg posx2) $(arg posy2) $(arg posz2) $(arg yaw2) 0.0 0.0 base_link $(arg tf_name2) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_front_right"  args="$(arg posx3) $(arg posy3) $(arg posz3) $(arg yaw3) 0.0 0.0 base_link $(arg tf_name3) 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_back_left"   args="$(arg posx4) $(arg posy4) $(arg posz4) $(arg yaw4) 0.0 0.0 base_link $(arg tf_name4) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_back_center" args="$(arg posx5) $(arg posy5) $(arg posz5) $(arg yaw5) 0.0 0.0 base_link $(arg tf_name5) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_back_right"  args="$(arg posx6) $(arg posy6) $(arg posz6) $(arg yaw6) 0.0 0.0 base_link $(arg tf_name6) 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_left_shallowback" args="$(arg posx7) $(arg posy7) $(arg posz7) $(arg yaw7) 0.0 0.0 base_link $(arg tf_name7) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_left_back"        args="$(arg posx8) $(arg posy8) $(arg posz8) $(arg yaw8) 0.0 0.0 base_link $(arg tf_name8) 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_right_front"        args="$(arg posx9) $(arg posy9) $(arg posz9) $(arg yaw9)     0.0 0.0 base_link $(arg tf_name9) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_right_shallowfront" args="$(arg posx10) $(arg posy10) $(arg posz10) $(arg yaw10) 0.0 0.0 base_link $(arg tf_name10) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_right_shallowback"  args="$(arg posx11) $(arg posy11) $(arg posz11) $(arg yaw11) 0.0 0.0 base_link $(arg tf_name11) 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="ultrasound_right_back"         args="$(arg posx12) $(arg posy12) $(arg posz12) $(arg yaw12) 0.0 0.0 base_link $(arg tf_name12) 10"/>
+
+
+  <node pkg="rosserial_python" type="serial_node.py" name="rosserial_ultrasound" output="screen">
+    <param name="port"  value="$(arg port)" />
+    <param name="baud"  value="$(arg baud)" />
+  </node>
+
+  <node pkg="arduino_ultrasound" type="arduino_ultrasound" name="arduino_ultrasound" output="screen">
+    <param name="dev_count"  value="$(arg dev_count)" />
+    <param name="dev1"  value="$(arg dev1)" />
+    <param name="dev2"  value="$(arg dev2)" />
+    <param name="dev3"  value="$(arg dev3)" />
+    <param name="dev4"  value="$(arg dev4)" />
+    <param name="dev5"  value="$(arg dev5)" />
+    <param name="dev6"  value="$(arg dev6)" />
+    <param name="dev7"  value="$(arg dev7)" />
+    <param name="dev8"  value="$(arg dev8)" />
+    <param name="dev9"  value="$(arg dev9)" />
+    <param name="dev10" value="$(arg dev10)" />
+    <param name="dev11" value="$(arg dev11)" />
+    <param name="dev12" value="$(arg dev12)" />
+
+    <param name="posx1" value="$(arg posx1)" />
+    <param name="posx2" value="$(arg posx2)" />
+    <param name="posx3" value="$(arg posx3)" />
+    <param name="posx4" value="$(arg posx4)" />
+    <param name="posx5" value="$(arg posx5)" />
+    <param name="posx6" value="$(arg posx6)" />
+    <param name="posx7" value="$(arg posx7)" />
+    <param name="posx8" value="$(arg posx8)" />
+    <param name="posx9" value="$(arg posx9)" />
+    <param name="posx10" value="$(arg posx10)" />
+    <param name="posx11" value="$(arg posx11)" />
+    <param name="posx12" value="$(arg posx12)" />
+
+    <param name="posy1" value="$(arg posy1)" />
+    <param name="posy2" value="$(arg posy2)" />
+    <param name="posy3" value="$(arg posy3)" />
+    <param name="posy4" value="$(arg posy4)" />
+    <param name="posy5" value="$(arg posy5)" />
+    <param name="posy6" value="$(arg posy6)" />
+    <param name="posy7" value="$(arg posy7)" />
+    <param name="posy8" value="$(arg posy8)" />
+    <param name="posy9" value="$(arg posy9)" />
+    <param name="posy10" value="$(arg posy10)" />
+    <param name="posy11" value="$(arg posy11)" />
+    <param name="posy12" value="$(arg posy12)" />
+
+    <param name="posz1" value="$(arg posz1)" />
+    <param name="posz2" value="$(arg posz2)" />
+    <param name="posz3" value="$(arg posz3)" />
+    <param name="posz4" value="$(arg posz4)" />
+    <param name="posz5" value="$(arg posz5)" />
+    <param name="posz6" value="$(arg posz6)" />
+    <param name="posz7" value="$(arg posz7)" />
+    <param name="posz8" value="$(arg posz8)" />
+    <param name="posz9" value="$(arg posz9)" />
+    <param name="posz10" value="$(arg posz10)" />
+    <param name="posz11" value="$(arg posz11)" />
+    <param name="posz12" value="$(arg posz12)" />
+
+    <param name="yaw1" value="$(arg yaw1)" />
+    <param name="yaw2" value="$(arg yaw2)" />
+    <param name="yaw3" value="$(arg yaw3)" />
+    <param name="yaw4" value="$(arg yaw4)" />
+    <param name="yaw5" value="$(arg yaw5)" />
+    <param name="yaw6" value="$(arg yaw6)" />
+    <param name="yaw7" value="$(arg yaw7)" />
+    <param name="yaw8" value="$(arg yaw8)" />
+    <param name="yaw9" value="$(arg yaw9)" />
+    <param name="yaw10" value="$(arg yaw10)" />
+    <param name="yaw11" value="$(arg yaw11)" />
+    <param name="yaw12" value="$(arg yaw12)" />
+
+    <param name="max_range1" value="$(arg max_range1)" />
+    <param name="max_range2" value="$(arg max_range2)" />
+    <param name="max_range3" value="$(arg max_range3)" />
+    <param name="max_range4" value="$(arg max_range4)" />
+    <param name="max_range5" value="$(arg max_range5)" />
+    <param name="max_range6" value="$(arg max_range6)" />
+    <param name="max_range7" value="$(arg max_range7)" />
+    <param name="max_range8" value="$(arg max_range8)" />
+    <param name="max_range9" value="$(arg max_range9)" />
+    <param name="max_range10" value="$(arg max_range10)" />
+    <param name="max_range11" value="$(arg max_range11)" />
+    <param name="max_range12" value="$(arg max_range12)" />
+
+    <param name="tf_name1" value="$(arg tf_name1)" />
+    <param name="tf_name2" value="$(arg tf_name2)" />
+    <param name="tf_name3" value="$(arg tf_name3)" />
+    <param name="tf_name4" value="$(arg tf_name4)" />
+    <param name="tf_name5" value="$(arg tf_name5)" />
+    <param name="tf_name6" value="$(arg tf_name6)" />
+    <param name="tf_name7" value="$(arg tf_name7)" />
+    <param name="tf_name8" value="$(arg tf_name8)" />
+    <param name="tf_name9" value="$(arg tf_name9)" />
+    <param name="tf_name10" value="$(arg tf_name10)" />
+    <param name="tf_name11" value="$(arg tf_name11)" />
+    <param name="tf_name12" value="$(arg tf_name12)" />
+  </node>
+</launch>

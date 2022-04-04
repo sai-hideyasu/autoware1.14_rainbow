@@ -1,0 +1,20 @@
+<launch>
+
+  <!-- declare arguments with default values -->
+  <arg name="fps" default="20"/>                  <!--frame per second to try to acquire the image -->
+  <arg name="format" default="BayerRG8"/>         <!--Pixel Format to acquire the image-->
+  <arg name="timeout" default="1000"/>            <!--Timeout in mili seconds-->
+  <arg name="gain" default="3.0"/>               <!--Gain 0.0 to 48.0-->
+  <arg name="reverse_x" default="true"/>         <!--flip the image vertically-->
+  <arg name="reverse_y" default="true"/>         <!--flip the image horizontally-->
+
+  <node pkg="arena_sdk" type="lucid_camera" name="lucid_camera" output="screen">
+    <param name="fps" value="$(arg fps)"/>
+    <param name="format" value="$(arg format)"/>
+    <param name="timeout" value="$(arg timeout)"/>
+    <param name="gain" value="$(arg gain)"/>
+    <param name="reverse_x" value="$(arg reverse_x)"/>
+    <param name="reverse_y" value="$(arg reverse_y)"/>
+  </node>
+</launch>
+

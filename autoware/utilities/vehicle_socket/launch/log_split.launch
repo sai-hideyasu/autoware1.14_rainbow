@@ -1,0 +1,16 @@
+<launch>
+	<arg name="read_log_path" default="/home/sit/Desktop/2021_11_03/2021_09_21_add_blinker_and_stop_line.csv_2021-11-3_8-57-42.8448.csv"/>
+        <arg name="write_log_path" default="/tmp/log_split.csv"/>
+        <arg name="first_hour" default="12"/>
+        <arg name="first_min" default="30"/>
+	<arg name="end_hour" default="13"/>
+	<arg name="end_min" default="30"/>
+
+	<node pkg="vehicle_socket" type="log_split" name="log_split" output="screen">
+		<param name="read_log_path" value="$(arg read_log_path)"/>
+                <param name="first_hour" value="$(arg first_hour)"/>
+                <param name="first_min" value="$(arg first_min)"/>
+                <param name="end_hour" value="$(arg end_hour)"/>
+                <param name="end_min" value="$(arg end_min)"/>
+	</node>
+</launch>

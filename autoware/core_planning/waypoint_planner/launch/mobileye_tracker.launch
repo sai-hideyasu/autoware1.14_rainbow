@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="waypoint_planner" type="mobileye_transform" name="mobileye_transform" output="log">
+  </node>
+
+  <node pkg="waypoint_planner" type="mobileye_tracker" name="mobileye_tracker" output="log">
+    <remap from="/safety_waypoints" to="/position_adjustment_waypoints" />
+  </node>
+</launch>

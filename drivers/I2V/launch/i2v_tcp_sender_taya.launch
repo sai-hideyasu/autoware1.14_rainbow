@@ -1,0 +1,62 @@
+<launch> 
+  <arg name="guid" default="5963" />
+  <arg name="ip_jousi" default="157.120.17.3" />
+  <arg name="ip_taya" default="157.120.17.2" />
+  <arg name="port" default="56974" />
+  <arg name="aes128_key" default="FcpE4rN66Rn2bx9A" />
+  <arg name="aes128_constract_vec" default="8LdC4iuDsvvTv6CB" />
+  <arg name="use_time_info" default="1" />
+  <arg name="const_latitude_deg" default="0.0" />
+  <arg name="const_longitude_deg" default="0.0" />
+  <arg name="const_velocity_kh" default="0.0" />
+  <arg name="light_color_jousi" default="light_color_jousi" />
+
+  <arg name="signal_id_jousi" default="285212673"/>
+  <arg name="infomation_id_jousi" default="8193"/>
+  <arg name="signal_id_taya" default="285212674"/>
+  <arg name="infomation_id_taya" default="8194"/>
+  <arg name="use_load_id_jousi" default="2"/>
+  <arg name="use_car_signal_id_jousi" default="1"/>
+  <arg name="use_arrow_jousi" default="0"/> 
+  <arg name="use_load_id_taya" default="2"/>
+  <arg name="use_car_signal_id_taya" default="1"/>
+  <arg name="use_arrow_taya" default="4"/>
+  <arg name="light_color_taya" default="light_color_taya" />
+
+  <!--node pkg="i2v" type="i2v_tcp_sender" name="i2v_tcp_sender_jousi" output="screen">
+    <param name="guid" value="$(arg guid)" />
+    <param name="ip" value="$(arg ip_jousi)" />
+    <param name="port" value="$(arg port)" />
+    <param name="aes128_key" value="$(arg aes128_key)" />
+    <param name="aes128_constract_vec" value="$(arg aes128_constract_vec)" />
+    <param name="use_time_info" value="$(arg use_time_info)" />
+    <param name="const_latitude_deg" value="$(arg const_latitude_deg)" />
+    <param name="const_longitude_deg" value="$(arg const_longitude_deg)" />
+    <param name="const_velocity_kh" value="$(arg const_velocity_kh)" />
+    <param name="signal_id" value="$(arg signal_id_jousi)" />
+    <param name="infomation_id" value="$(arg infomation_id_jousi)" />
+    <param name="use_load_id" value="$(arg use_load_id_jousi)" />
+    <param name="use_car_signal_id" value="$(arg use_car_signal_id_jousi)" />
+    <param name="use_load_id" value="$(arg use_load_id_jousi)" />
+    <param name="use_arrow" value="$(arg use_arrow_jousi)" />
+    <param name="light_color" value="$(arg light_color_jousi)" />
+  </node-->
+
+  <node pkg="i2v" type="i2v_tcp_sender" name="i2v_tcp_sender_taya" output="screen">
+    <param name="guid" value="$(arg guid)" />
+    <param name="ip" value="$(arg ip_taya)" />
+    <param name="port" value="$(arg port)" />
+    <param name="aes128_key" value="$(arg aes128_key)" />
+    <param name="aes128_constract_vec" value="$(arg aes128_constract_vec)" />
+    <param name="use_time_info" value="$(arg use_time_info)" />
+    <param name="const_latitude_deg" value="$(arg const_latitude_deg)" />
+    <param name="const_longitude_deg" value="$(arg const_longitude_deg)" />
+    <param name="const_velocity_kh" value="$(arg const_velocity_kh)" />
+    <param name="signal_id" value="$(arg signal_id_taya)" />
+    <param name="infomation_id" value="$(arg infomation_id_taya)" />
+    <param name="use_load_id" value="$(arg use_load_id_taya)" />
+    <param name="use_car_signal_id" value="$(arg use_car_signal_id_taya)" />
+    <param name="use_arrow" value="$(arg use_arrow_taya)" />
+    <param name="light_color" value="$(arg light_color_taya)" />
+  </node>
+</launch>

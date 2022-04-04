@@ -1,0 +1,15 @@
+<launch> 
+  <arg name="guid" default="5963" />
+  <arg name="ip" default="210.156.173.53" />
+  <arg name="port" default="56974" />
+  <arg name="evp_key" default="FcpE4rN66Rn2bx9A" />
+  <arg name="evp_constract_vec" default="8LdC4iuDsvvTv6CB" />
+
+  <node pkg="i2v" type="i2v_tcp_reader" name="i2v_tcp_reader" output="screen">
+    <param name="guid" value="$(arg guid)" />
+    <param name="ip" value="$(arg ip)" />
+    <param name="port" value="$(arg port)" />
+    <param name="evp_key" value="$(arg evp_key)" />
+    <param name="evp_constract_vec" value="$(arg evp_constract_vec)" />
+  </node>
+</launch>

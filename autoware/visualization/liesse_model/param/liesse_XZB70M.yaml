@@ -1,0 +1,10 @@
+vehicle_info:
+  maximum_steering_angle: 810.0
+  minimum_turning_radius: 6.5
+  vehicle_length: 6.5
+  vehicle_width: 2.2
+  vehicle_height: 2.55
+  front_bumper_to_baselink: 4.55
+  wheel_base: 3.935
+  wheelrad_to_steering_can_value_left: 20935.4958411006
+  wheelrad_to_steering_can_value_right: 20791.4464661611

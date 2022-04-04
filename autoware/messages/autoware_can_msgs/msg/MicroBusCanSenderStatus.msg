@@ -1,0 +1,8 @@
+Header header
+bool use_position_checker
+bool use_input_steer
+bool use_input_drive
+int8 use_velocity_topic
+bool position_check_stop
+bool angle_limit_over
+string safety_error_message

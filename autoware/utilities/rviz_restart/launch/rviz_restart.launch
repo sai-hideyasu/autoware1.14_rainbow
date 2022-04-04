@@ -1,0 +1,4 @@
+<launch>
+	<node pkg="rviz_restart" type="rviz_restart" name="rviz_restart" output="screen">
+	</node>
+</launch>

@@ -1,0 +1,4 @@
+<!-- -->
+<launch>
+  <node pkg="autoware_connector" type="localizer_smooth_transition" name="localizer_smooth_transition" output="log" />
+</launch>

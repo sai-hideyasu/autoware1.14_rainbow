@@ -1,0 +1,10 @@
+<launch>
+	<arg name="use_voltage" default="0"/>
+
+	<node pkg="vehicle_socket" type="steer_proofreading" name="steer_proofreading" output="screen">
+	</node>
+
+	<node pkg="vehicle_socket" type="rs232_proofreading" name="rs232_proofreading" output="screen">
+		<param name="use_voltage" value="$(arg use_voltage)" />	
+	</node>
+</launch>

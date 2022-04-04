@@ -1,0 +1,15 @@
+<launch>
+
+ <arg name="scene_num" default="noupdate" />
+ <arg name="path_area_list" default='""' />
+ <arg name="path_pcd" default='/home/sit/load_data/okabe/pcd/old/0.50_tyokusen2_rot.pcd,/home/sit/load_data/okabe/pcd/old/0.50_tyokusen1_rot.pcd,/home/sit/load_data/okabe/pcd/old/0.50_soto4_rot.pcd,/home/sit/load_data/okabe/pcd/old/0.50_soto3_rot.pcd,/home/sit/load_data/okabe/pcd/old/0.50_Lzi2_rot.pcd,/home/sit/load_data/okabe/pcd/old/0.50_Lzi1_rot.pcd' />
+
+ <node pkg="map_file" type="points_map_loader" name="points_map_loader" >
+  <rosparam subst_value="true">
+    area: $(arg scene_num)
+    arealist_path: $(arg path_area_list)
+    pcd_paths: [ $(arg path_pcd) ]
+  </rosparam>
+ </node>
+ 
+</launch>

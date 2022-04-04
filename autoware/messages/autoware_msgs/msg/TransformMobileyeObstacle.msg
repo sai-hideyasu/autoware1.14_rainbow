@@ -1,0 +1,4 @@
+Header header
+geometry_msgs/Pose map_pose
+float64 velocity_mps
+mobileye_560_660_msgs/ObstacleData orig_data

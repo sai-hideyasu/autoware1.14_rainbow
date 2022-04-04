@@ -1,0 +1,37 @@
+<launch>
+  <!--arg name="can_hardware_id" default="59879" /-->
+  <arg name="can_hardware_id" default="40461" />
+  <arg name="can_circuit_id" default="0" />
+  <arg name="can_bit_rate" default="500000" />
+
+  <node pkg="kvaser_interface" type="kvaser_can_bridge" name="kvaser_can_bridge" output="screen">
+    <param name="can_hardware_id" value="$(arg can_hardware_id)" />
+    <param name="can_circuit_id" value="$(arg can_circuit_id)" />
+    <param name="can_bit_rate" value="$(arg can_bit_rate)" />
+  </node>
+
+
+
+  <arg name="viz_frame_id" default="me_viz" />
+  <arg name="sensor_frame_id" default="mobileye" />
+  <arg name="use_kvaser" default="false" />
+  <arg name="kvaser_hardware_id" default="40461" />
+  <arg name="kvaser_circuit_id" default="0" />
+  <arg name="use_socketcan" default="false" />
+  <arg name="socketcan_device" default="can0" />
+
+  <include file="$(find kvaser_interface)/launch/kvaser_can_bridge.launch" if="$(arg use_kvaser)">
+    <arg name="can_hardware_id" value="$(arg kvaser_hardware_id)" />
+    <arg name="can_circuit_id" value="$(arg kvaser_circuit_id)" />
+    <arg name="can_bit_rate" value="500000" />
+  </include>
+
+  <node pkg="socketcan_bridge" type="socketcan_bridge_node" name="socketcan_bridge" if="$(arg use_socketcan)">
+    <param name="can_device" value="$(arg socketcan_device)" />
+  </node>
+
+  <node pkg="mobileye_560_660" type="mobileye_560_660" name="mobileye_560_660">
+    <param name="viz_frame_id" value="$(arg viz_frame_id)" />
+    <param name="sensor_frame_id" value="$(arg sensor_frame_id)" />
+  </node>
+</launch>

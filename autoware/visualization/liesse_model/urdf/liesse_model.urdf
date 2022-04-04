@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="liesse_model">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="1.3197 4.1571E-11 1.3102"
+        rpy="0 0 0" />
+      <mass
+        value="31203" />
+      <inertia
+        ixx="27217"
+        ixy="5.4907E-06"
+        ixz="1445.1"
+        iyy="110080"
+        iyz="6.5133E-06"
+        izz="104580" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://liesse_model/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://liesse_model/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

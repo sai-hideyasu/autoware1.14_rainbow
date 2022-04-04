@@ -1,0 +1,4 @@
+#waypoint_param.steer_actual_plus_subに補正として入れるステア補正値
+Header header
+bool processing
+int16 correct_val

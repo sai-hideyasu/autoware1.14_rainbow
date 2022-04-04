@@ -1,0 +1,10 @@
+Header header
+uint32 search_distance
+float64 first_hour
+float64 first_min
+float64 first_sec
+float64 step_green
+float64 step_yellow
+float64 step_red
+float64 takeover_acc
+int8 use_time_flag

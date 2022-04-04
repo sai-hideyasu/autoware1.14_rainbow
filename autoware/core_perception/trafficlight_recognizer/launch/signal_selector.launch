@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="trafficlight_recognizer" type="signal_selector" name="signal_selector" output="log">
+  </node>
+</launch>

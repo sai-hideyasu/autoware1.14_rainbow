@@ -1,0 +1,7 @@
+<launch> 
+  <arg name="path" default="/home/autoware/spa_lib/nmea_sample.txt" />
+
+  <node pkg="novatel_oem7" type="sentence_text_sender" name="sentence_text_sender" output="screen">
+    <param name="path" value="$(arg path)" />
+  </node>
+</launch>
