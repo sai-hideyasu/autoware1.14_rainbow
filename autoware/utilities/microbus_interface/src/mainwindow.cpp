@@ -243,6 +243,8 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 	connect(ui->bt_steer_proofreading_sub, SIGNAL(clicked()), this, SLOT(click_steer_proofreading_base()));
 	connect(ui->bt4_rosbag, SIGNAL(clicked()), this, SLOT(click_rosbag()));
 	connect(ui->sb_target_deceleration, SIGNAL(valueChanged(double)), this, SLOT(car_target_deceleration_change(double)));
+	connect(ui->bt_track_excess_acc, SIGNAL(clicked()), this, SLOT(click_track_excess_acc()));
+	connect(ui->bt_track_excess_stop, SIGNAL(clicked()), this, SLOT(click_track_excess_stop()));
 
 	nh_ = nh;  private_nh_ = p_nh;
 
@@ -2770,6 +2772,20 @@ void MainWindow::click_rosbag()
 			ofs_record.close();
 		}
 	}
+}
+
+void MainWindow::click_track_excess_acc()
+{
+	std::ofstream ofs("/tmp/track_irregular", std::ios_base::app);
+	ofs << waypoint_param_.id << "," << "過加速\n";
+	ofs.close();
+}
+
+void MainWindow::click_track_excess_stop()
+{
+	std::ofstream ofs("/tmp/track_irregular", std::ios_base::app);
+	ofs << waypoint_param_.id << "," << "過停止\n";
+	ofs.close();
 }
 
 void MainWindow::slide_specified_speed(int val)

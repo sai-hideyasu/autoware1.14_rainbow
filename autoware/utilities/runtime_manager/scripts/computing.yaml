@@ -8107,7 +8107,7 @@ params :
       desc : k_accel_p_velocity
       label: k_accel_p_velocity
       min  : 0.0
-      max  : 2.0
+      max  : 50.0
       v    : 0
       cmd_param:
         dash     : ''
@@ -8125,7 +8125,7 @@ params :
       desc : k_accel_d_velocity
       label: k_accel_d_velocity
       min  : 0.0
-      max  : 2.0
+      max  : 50.0
       v    : 0
       cmd_param:
         dash     : ''

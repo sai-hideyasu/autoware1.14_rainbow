@@ -229,7 +229,7 @@ private:
 						//if(ud.bit_interval > 0 && ud.bit_interval <= 2) ultrasound_flag = true;//０は超音波ビット履歴で１つだけビットが立っている状態
 						if(ud.bit_interval != -1) ultrasound_flag = true;//０は超音波ビット履歴で１つだけビットが立っている状態
 						way.waypoints[i].waypoint_param.object_stop_line = 1;
-						way.waypoints[i].waypoint_param.temporary_fixed_velocity = 0;
+						way.waypoints[i].waypoint_param.temporary_fixed_velocity_kmh = 0;
 					}
 					if(ultrasound_flag == false) use_ultrasound_ = 0;
 				}
@@ -257,7 +257,7 @@ private:
 				stop_time_ = way.waypoints[i].waypoint_param.temporary_stop_line;
 				//fixed_velocity_ = (selected.on_signal_ == true) ? 0 : way.waypoints[i].waypoint_param.temporary_fixed_velocity / 3.6;
 				if(selected.on_signal_ || selected.on_oncoming_) selected.fixed_velocity_ = 0;
-				else selected.fixed_velocity_ = std::max(way.waypoints[i].waypoint_param.temporary_fixed_velocity / 3.6, 0.0);
+				else selected.fixed_velocity_ = std::max(way.waypoints[i].waypoint_param.temporary_fixed_velocity_kmh / 3.6, 0.0);
 				/*if(fixed_velocity_ < 0)
 				{
 					pub_temporary_distance_.publish(dis);
@@ -362,7 +362,7 @@ private:
 		//経路情報の停止フラグを探索して停止線フラグの位置を取得
 		SelectedLine stop_index = stop_line_search(new_lane, 0); //std::cout << stop_index.waypoint_index_ << std::endl;
 		if(!stop_index.on_signal_ && !stop_index.on_object_ && !stop_index.on_oncoming_ && stop_index.on_temporary_
-			&& new_lane.waypoints[stop_index.waypoint_index_].waypoint_param.temporary_fixed_velocity != 0)
+			&& new_lane.waypoints[stop_index.waypoint_index_].waypoint_param.temporary_fixed_velocity_kmh != 0)
 		{
 			SelectedLine stop_index2 = stop_line_search(new_lane, stop_index.waypoint_index_+1);
 			if(stop_index2.waypoint_index_ != -1)

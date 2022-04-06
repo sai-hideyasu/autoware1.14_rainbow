@@ -369,6 +369,8 @@ public:
     QPushButton *bt_auto_shutdown;
     QLineEdit *li_max_speed;
     QLabel *lb_max_speed;
+    QPushButton *bt_track_excess_acc;
+    QPushButton *bt_track_excess_stop;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -2840,7 +2842,7 @@ public:
         lb_automode_mileage->setAlignment(Qt::AlignCenter);
         bt_auto_shutdown = new QPushButton(centralWidget);
         bt_auto_shutdown->setObjectName(QStringLiteral("bt_auto_shutdown"));
-        bt_auto_shutdown->setGeometry(QRect(470, 810, 221, 71));
+        bt_auto_shutdown->setGeometry(QRect(570, 810, 121, 71));
         QFont font16;
         font16.setPointSize(32);
         bt_auto_shutdown->setFont(font16);
@@ -2849,15 +2851,29 @@ public:
         bt_auto_shutdown->setAutoExclusive(false);
         li_max_speed = new QLineEdit(centralWidget);
         li_max_speed->setObjectName(QStringLiteral("li_max_speed"));
-        li_max_speed->setGeometry(QRect(250, 810, 151, 71));
+        li_max_speed->setGeometry(QRect(210, 800, 151, 41));
         li_max_speed->setFont(font12);
         li_max_speed->setAlignment(Qt::AlignCenter);
         lb_max_speed = new QLabel(centralWidget);
         lb_max_speed->setObjectName(QStringLiteral("lb_max_speed"));
-        lb_max_speed->setGeometry(QRect(10, 810, 241, 61));
-        lb_max_speed->setFont(font9);
+        lb_max_speed->setGeometry(QRect(0, 800, 211, 41));
+        lb_max_speed->setFont(font12);
         lb_max_speed->setScaledContents(false);
         lb_max_speed->setAlignment(Qt::AlignCenter);
+        bt_track_excess_acc = new QPushButton(centralWidget);
+        bt_track_excess_acc->setObjectName(QStringLiteral("bt_track_excess_acc"));
+        bt_track_excess_acc->setGeometry(QRect(0, 840, 121, 41));
+        bt_track_excess_acc->setFont(font12);
+        bt_track_excess_acc->setCheckable(false);
+        bt_track_excess_acc->setAutoRepeat(false);
+        bt_track_excess_acc->setAutoExclusive(false);
+        bt_track_excess_stop = new QPushButton(centralWidget);
+        bt_track_excess_stop->setObjectName(QStringLiteral("bt_track_excess_stop"));
+        bt_track_excess_stop->setGeometry(QRect(130, 840, 121, 41));
+        bt_track_excess_stop->setFont(font12);
+        bt_track_excess_stop->setCheckable(false);
+        bt_track_excess_stop->setAutoRepeat(false);
+        bt_track_excess_stop->setAutoExclusive(false);
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -3000,7 +3016,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tab3->setCurrentIndex(3);
+        tab3->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -3229,6 +3245,8 @@ public:
 "mileage", Q_NULLPTR));
         bt_auto_shutdown->setText(QApplication::translate("MainWindow", "\347\265\202\344\272\206", Q_NULLPTR));
         lb_max_speed->setText(QApplication::translate("MainWindow", "\351\200\237\345\272\246\343\202\255\343\203\243\343\203\203\343\203\227", Q_NULLPTR));
+        bt_track_excess_acc->setText(QApplication::translate("MainWindow", "\351\201\216\345\212\240\351\200\237", Q_NULLPTR));
+        bt_track_excess_stop->setText(QApplication::translate("MainWindow", "\351\201\216\345\201\234\346\255\242", Q_NULLPTR));
     } // retranslateUi
 
 };

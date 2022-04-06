@@ -27,7 +27,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -10199,9 +10199,9 @@ mileage</string>
    <widget class="QPushButton" name="bt_auto_shutdown">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>570</x>
       <y>810</y>
-      <width>221</width>
+      <width>121</width>
       <height>71</height>
      </rect>
     </property>
@@ -10226,10 +10226,10 @@ mileage</string>
    <widget class="QLineEdit" name="li_max_speed">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>810</y>
+      <x>210</x>
+      <y>800</y>
       <width>151</width>
-      <height>71</height>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
@@ -10244,15 +10244,15 @@ mileage</string>
    <widget class="QLabel" name="lb_max_speed">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>810</y>
-      <width>241</width>
-      <height>61</height>
+      <x>0</x>
+      <y>800</y>
+      <width>211</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>30</pointsize>
+      <pointsize>25</pointsize>
      </font>
     </property>
     <property name="text">
@@ -10263,6 +10263,60 @@ mileage</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="bt_track_excess_acc">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>840</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>25</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>過加速</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+    <property name="autoRepeat">
+     <bool>false</bool>
+    </property>
+    <property name="autoExclusive">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="bt_track_excess_stop">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>840</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>25</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>過停止</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+    <property name="autoRepeat">
+     <bool>false</bool>
+    </property>
+    <property name="autoExclusive">
+     <bool>false</bool>
     </property>
    </widget>
   </widget>

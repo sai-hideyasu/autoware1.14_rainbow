@@ -85,7 +85,7 @@ private:
 					std::cout << waypoints[waycou].waypoint_param.id << "," << vp2m_rot.x() * vp1m_rot.x() << "," << wp1.x << "," << wp1.y << "," << wp2m_rot.x() << "," << intersection << std::endl;
 					waypoints[waycou].waypoint_param.signal_stop_line = 1;
 					waypoints[waycou].waypoint_param.stop_line_adjustment = intersection;
-					waypoints[waycou].waypoint_param.temporary_fixed_velocity = 0;
+					waypoints[waycou].waypoint_param.temporary_fixed_velocity_kmh = 0;
 				}
 			}
 		}
@@ -136,7 +136,7 @@ private:
 			for(int waycou=0; waycou<lane.waypoints.size(); waycou++)
 			{
 				const autoware_msgs::WaypointParam &param = lane.waypoints[waycou].waypoint_param;
-				ofs << param.id << "," << +param.signal_stop_line << "," << param.stop_line_adjustment << "," << param.temporary_fixed_velocity << std::endl;
+				ofs << param.id << "," << +param.signal_stop_line << "," << param.stop_line_adjustment << "," << param.temporary_fixed_velocity_kmh << std::endl;
 			}
 			ofs << std::endl;
 		}

@@ -46,7 +46,7 @@ namespace waypoint_maker
 		wp->waypoint_param.signal_stop_vector_position_correction = ((map.find("signal_stop_vector_position_correction") != map.end()) ? std::stod(map["signal_stop_vector_position_correction"]) : 0);
 		wp->waypoint_param.oncoming_stop_line = ((map.find("oncoming_stop_line") != map.end()) ? std::stoi(map["oncoming_stop_line"]) : 0);
 		wp->waypoint_param.temporary_stop_line = ((map.find("temporary_stop_line") != map.end()) ? std::stod(map["temporary_stop_line"]) : 0);
-		wp->waypoint_param.temporary_fixed_velocity = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : 0);
+		wp->waypoint_param.temporary_fixed_velocity_kmh = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : 0);
 		wp->waypoint_param.stop_line_adjustment = ((map.find("stop_line_adjustment") != map.end()) ? std::stod(map["stop_line_adjustment"]) : 0);
 		wp->waypoint_param.period_signal_time_first = ((map.find("period_signal_time_first") != map.end()) ? map["period_signal_time_first"] : "");
 		wp->waypoint_param.period_signal_time_step_green = ((map.find("period_signal_time_step_green") != map.end()) ? std::stod(map["period_signal_time_step_green"]) : 0);

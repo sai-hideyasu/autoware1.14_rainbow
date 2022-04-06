@@ -37,7 +37,7 @@ int8 signal_image_area_select #画像から信号器を検出する領域指定
 float64 object_stop_line
 float64 temporary_stop_line
 float64 stop_line_adjustment
-float64 temporary_fixed_velocity
+float64 temporary_fixed_velocity_kmh
 string period_signal_time_first
 float64 period_signal_time_step_green
 float64 period_signal_time_step_yellow

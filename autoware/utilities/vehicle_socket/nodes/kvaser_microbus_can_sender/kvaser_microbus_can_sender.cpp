@@ -167,9 +167,9 @@ public:
 	double get_brake_e_prev_acceleration() {return brake_e_prev_acceleration_;}
 	double get_brake_e_prev_distance() {return brake_e_prev_distance_;}
 	double get_steer_e_prev_distance() {return steer_e_prev_distance_;}
-	double get_acclel_diff_sum_velocity() {return accel_diff_sum_velocity_;}
-	double get_acclel_diff_sum_acceleration() {return accel_diff_sum_acceleration_;}
-	double get_acclel_diff_sum_distance() {return accel_diff_sum_distance_;}
+	double get_accel_diff_sum_velocity() {return accel_diff_sum_velocity_;}
+	double get_accel_diff_sum_acceleration() {return accel_diff_sum_acceleration_;}
+	double get_accel_diff_sum_distance() {return accel_diff_sum_distance_;}
 	double get_brake_diff_sum_velocity() {return brake_diff_sum_velocity_;}
 	double get_brake_diff_sum_acceleration() {return brake_diff_sum_acceleration_;}
 	double get_brake_diff_sum_distance() {return brake_diff_sum_distance_;}
@@ -1590,6 +1590,7 @@ private:
 
 	double past_velocity_twist = 0.0;	//!< 前回速度
 	double past_sec_twist = 0.0;	//!< 前回取得時の時間
+	bool update_current_velocity_; //!<current_velocityが更新されたか？
 	void TwistPoseCallback(const geometry_msgs::TwistStampedConstPtr &twist_msg,
 	                       const geometry_msgs::PoseStampedConstPtr &pose_msg)
 	{
@@ -1659,6 +1660,8 @@ private:
 		pub_acc_.publish(accel);
 		past_velocity_twist = current_velocity_.twist.linear.x / 3.6;	//!<速度保管
 		past_sec_twist = velocity_stamp;	//!< 現時刻保存
+
+		update_current_velocity_ = true;
 	}
 
 	void callbackTwistCmd(const autoware_msgs::VehicleCmd::ConstPtr &msg)
@@ -2222,14 +2225,15 @@ private:
 		return stroke_kagen;
 	}
 
-	double _accel_stroke_pid_control(double current_velocity, double cmd_velocity, std::string &routine_str)
+	double e_d_;//PIDのD　current_velocityの更新タイミングに合わせるためにメンバ変数にしてある
+	double _accel_stroke_pid_control(double current_velocity_kmh, double cmd_velocity_kmh, std::string &routine_str)
 	{
 		routine_str = "acc";
 		stop_distance_over_sum_ = 0;
 		//cmd_velocityとcurrent_velocityの差が小さい場合、stepを小さくする
 		double accle_stroke_step = setting_.accel_stroke_step_max;//3;
-		double vel_sa = cmd_velocity - current_velocity;
-		double accel_stroke_adjust_th = (cmd_velocity + current_velocity)/2.0 * (setting_.accel_stroke_adjust_th/ 100.0);
+		double vel_sa = cmd_velocity_kmh - current_velocity_kmh;
+		double accel_stroke_adjust_th = (cmd_velocity_kmh + current_velocity_kmh)/2.0 * (setting_.accel_stroke_adjust_th/ 100.0);
 		if(vel_sa < accel_stroke_adjust_th)
 		//if(vel_sa < setting_.accel_stroke_adjust_th)
 		{
@@ -2268,7 +2272,7 @@ private:
 		pid_params.set_stroke_prev(0);
 
 		//P
-		double e = cmd_velocity - current_velocity;
+		double e = cmd_velocity_kmh - current_velocity_kmh;
 		//std::cout << "if accel : " << current_velocity << "," << cmd_velocity << "," << e << std::endl;
 		//std::cout << "accel e : " << e << std::endl;
 		//std::cout << "cmd vel : " << cmd_velocity << std::endl;
@@ -2277,12 +2281,12 @@ private:
 		//I
 		double e_i;
 		pid_params.plus_accel_diff_sum_velocity(e);
-		if (pid_params.get_acclel_diff_sum_velocity() > setting_.accel_max_i)//この判定はまだ考慮の余地あり
+		if (pid_params.get_accel_diff_sum_velocity() > setting_.accel_max_i)//この判定はまだ考慮の余地あり
 		{
 			//routine_str = "acc2";
 			//waypoints上の最大速度と現在の速度の差から、iの最大に補正をかける
 			double max_i;
-			double vel_diff = local_way_max_vel_mps_ * 3.6 - current_velocity;
+			double vel_diff = local_way_max_vel_mps_ * 3.6 - current_velocity_kmh;
 			if(vel_diff < 10)
 			{
 				max_i = setting_.accel_max_i;
@@ -2302,17 +2306,21 @@ private:
 		}
 		else
 		{
+			std::cout << "acc3step," << accle_stroke_step << std::endl;
 			routine_str = "acc3";
-			e_i = pid_params.get_acclel_diff_sum_velocity();
+			e_i = pid_params.get_accel_diff_sum_velocity();
 		}
 
 		//D
-		double e_d = e - pid_params.get_accel_e_prev_velocity();
+		if(update_current_velocity_ == true)
+		{
+			e_d_ = e - pid_params.get_accel_e_prev_velocity();
+			update_current_velocity_ = false;
+		}
 
 		double target_accel_stroke = setting_.k_accel_p_velocity * e +
 		       setting_.k_accel_i_velocity * e_i +
-		       setting_.k_accel_d_velocity * e_d;
-
+		       setting_.k_accel_d_velocity * e_d_;
 		pid_params.set_accel_e_prev_velocity(e);
 
 		double ret = target_accel_stroke;
@@ -2321,14 +2329,13 @@ private:
 		else if (ret < setting_.pedal_stroke_center)
 			ret = setting_.pedal_stroke_center;
 		if(ret < setting_.accel_stroke_offset) ret = setting_.accel_stroke_offset;
-		//if(stopper_distance_ <= 100 && stopper_distance_ >=0 && 
-		//	current_velocity >= 10.0 && ret > 0) ret = 0;
 
 		if(pid_params.get_stroke_prev() < 0 && ret >= 0)
 		{
 			double tmp = pid_params.get_stroke_prev() + accle_stroke_step;
 			if(tmp < ret) ret = tmp;
 		}
+		std::cout << "acc_ret," << target_accel_stroke << "," << e << "," << setting_.k_accel_p_velocity * e << "," << e_i << "," << setting_.k_accel_i_velocity * e_i << "," << e_d_ << "," << setting_.k_accel_d_velocity * e_d_ << "," << cmd_velocity_kmh << "," << current_velocity_kmh << std::endl;
 		//ブレーキをゆっくり踏む
 		/*if(pid_params.get_stroke_prev() < 0.0 && pid_params.get_stroke_prev() < ret)
 		{
@@ -2337,7 +2344,7 @@ private:
 			if(ret < setting_.pedal_stroke_min) ret = setting_.pedal_stroke_min;
 		}*/
 
-		double stroke_kagen = math_stroke_kagen_accle(current_velocity);
+		double stroke_kagen = math_stroke_kagen_accle(current_velocity_kmh);
 		if(ret < stroke_kagen) ret = stroke_kagen;
 		if(ret > waypoint_param_.accel_stroke_cap) ret = waypoint_param_.accel_stroke_cap;
 		if(ret > accel_stroke_cap_mobileye_) ret = accel_stroke_cap_mobileye_;
@@ -2774,6 +2781,7 @@ private:
 	void bufset_drive(unsigned char *buf, double current_velocity, double acceleration, double stroke_speed)
 	{
 		ros::Time nowtime = ros::Time::now();
+
 		if(can_receive_501_.drive_mode == autoware_can_msgs::MicroBusCan501::DRIVE_MODE_VELOCITY)
 		{
 			/*short drive_val;
@@ -3171,6 +3179,8 @@ public:
 		, log_write_501_(false)
 		, accel_stroke_cap_mobileye_(500)
 		, accel_stroke_cap_temporary_stopper_(500)
+		, update_current_velocity_(false)
+		, e_d_(0)
 	{
 		stopper_distance_.distance = -1;
 		stopper_distance_.send_process = autoware_msgs::StopperDistance::UNKNOWN;

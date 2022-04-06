@@ -412,6 +412,8 @@ private slots:
 	void click_steer_proofreading_main();
 	void click_steer_proofreading_base();
 	void click_rosbag();
+	void click_track_excess_acc();
+	void click_track_excess_stop();
 	void check_use_auto_chenge(bool flag);
 	void check_use_auto_log(bool flag);
 	void slide_specified_speed(int val);
