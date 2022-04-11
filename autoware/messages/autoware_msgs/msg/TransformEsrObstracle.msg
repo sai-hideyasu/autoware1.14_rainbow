@@ -1,0 +1,4 @@
+Header header
+geometry_msgs/Pose map_pose
+geometry_msgs/Twist velocity_mps
+derived_object_msgs/ObjectWithCovariance orig_data

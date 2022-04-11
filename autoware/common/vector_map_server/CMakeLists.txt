@@ -12,7 +12,10 @@ find_package(catkin REQUIRED COMPONENTS
   vector_map
   vector_map_msgs
   visualization_msgs
+  shape_msgs
+  radar_msgs
   mobileye_560_660_msgs
+  derived_object_msgs
 )
 
 set(CMAKE_CXX_FLAGS "-O2 -Wall ${CMAKE_CXX_FLAGS}")

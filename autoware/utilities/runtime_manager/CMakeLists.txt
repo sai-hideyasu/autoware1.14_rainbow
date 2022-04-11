@@ -117,6 +117,8 @@ install(
     scripts/setup_tab_rainbow.launch
     scripts/mobileye.launch
     scripts/mobileye_no_bridge.launch
+    scripts/esr.launch
+    scripts/esr_no_bridge.launch
     scripts/panel_view.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch_files
 )

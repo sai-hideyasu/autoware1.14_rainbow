@@ -12,6 +12,7 @@ find_package(
     autoware_health_checker
     autoware_msgs
     autoware_can_msgs
+    derived_object_msgs
     lanelet2_extension
     libwaypoint_follower
     pcl_conversions
@@ -180,9 +181,24 @@ add_dependencies(
   ${catkin_EXPORTED_TARGETS}
 )
 
+add_executable(
+  esr_transform
+  src/esr_transform/esr_transform.cpp
+)
+
+target_link_libraries(
+  esr_transform
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(
+  esr_transform
+  ${catkin_EXPORTED_TARGETS}
+)
+
 install(
   TARGETS astar_avoid velocity_set velocity_set_lanelet2 temporary_stopper stopper_distance local_waypoint_adjustment
-  clothoid_avoidance mobileye_transform mobileye_tracker
+  clothoid_avoidance mobileye_transform mobileye_tracker esr_transform
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

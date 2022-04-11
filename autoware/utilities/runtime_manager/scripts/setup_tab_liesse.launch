@@ -1,10 +1,10 @@
 <launch>
-  <arg name="autoware_path" default="/home/sit/saiko_car_ware_ai114"/>
+  <arg name="autoware_path" default="/home/sit/saiko_car_ware_2022_01_06_rainbow"/>
 
   <arg name="x" default="3.35"/>
   <arg name="y" default="0.0"/>
   <arg name="z" default="2.7"/>
-  <arg name="yaw" default="0.0"/>
+  <arg name="yaw" default="0.006"/>
   <arg name="pitch" default="0.0"/>
   <arg name="roll" default="0.0"/>
   <arg name="frame_id" default="base_link"/>
@@ -25,7 +25,6 @@
   <param name="/gyaw1" value="0.0"/>
   <param name="/gpitch1" value="0.0"/>
   <param name="/groll1" value="0.0"/>
-
   <!-- param name="/gx2" value="0.6382821547"/ -->
   <!-- param name="/gy2" value="-0.4094757795"/ -->
   <!-- param name="/gz2" value="2.7357697239"/ -->
@@ -48,6 +47,34 @@
   <param name="/gpitch2" value="0.0"/>
   <param name="/groll2" value="0.0"/>
 
+  <!-- 2021_05_26 mobileye tf-->
+  <arg name="mox" default="4.55"/>
+  <arg name="moy" default="0.0"/>
+  <arg name="moz" default="1.43"/>
+  <arg name="moyaw" default="-0.01"/>
+  <arg name="mopitch" default="0.0"/>
+  <arg name="moroll" default="0.0"/>
+  <param name="/mox" value="$(arg mox)"/>
+  <param name="/moy" value="$(arg moy)"/>
+  <param name="/moz" value="$(arg moz)"/>
+  <param name="/moyaw" value="$(arg moyaw)"/>
+  <param name="/mopitch" value="$(arg moroll)"/>
+  <param name="/moroll" value="$(arg mopitch)"/>
+
+  <!-- 2022_04_06 esr tf-->
+  <arg name="esrx" default="6.18"/>
+  <arg name="esry" default="0.0"/>
+  <arg name="esrz" default="0.5"/>
+  <arg name="esryaw" default="0.0"/>
+  <arg name="esrpitch" default="0.0"/>
+  <arg name="esrroll" default="0.0"/>
+  <param name="/esrx" value="$(arg esrx)"/>
+  <param name="/esry" value="$(arg esry)"/>
+  <param name="/esrz" value="$(arg esrz)"/>
+  <param name="/esryaw" value="$(arg esryaw)"/>
+  <param name="/esrpitch" value="$(arg esrpitch)"/>
+  <param name="/esrroll" value="$(arg esrroll)"/>
+
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_localizer_128" args="3.35 0.0 2.70 0.0 0.0 0.0 base_link velodyne8 10"/>
 
   <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne1" args="-1.12959 -0.0305311 0.169577 3.13041 -3.13411 -3.10954 velodyne8 velodyne1 10"/>
@@ -66,15 +93,19 @@
 
   <node pkg="tf" type="static_transform_publisher" name="velodyne8_to_velodyne9" args="-4.87014 -0.0623637 -0.138453 3.13484 0.00145343 0.00178374 velodyne8 velodyne9 10"/>
 
-  <!-- node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 -0.0025 0.0 0.0 base_link me_viz 10"/ -->
+  <!--node pkg="tf" type="static_transform_publisher" name="base_link_to_mobileye" args="6.31 0.0 1.43 -0.0025 0.0 0.0 base_link mobileye_pos 10"/ -->
 
-  <node pkg="tf" type="static_transform_publisher" name="base_link_to_me" args="6.31 0.0 1.43 -0.026 0.0 0.0 base_link me_viz 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_mobileye" args="$(arg mox) $(arg moy) $(arg moz) $(arg moyaw) $(arg mopitch) $(arg moroll) base_link me_viz 10"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_esr" args="$(arg esrx) $(arg esry) $(arg esrz) $(arg esryaw) $(arg esrpitch) $(arg esrroll) base_link esr_1 10"/>
 
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_front_base_link" args="4.55 0.0 0.0 0.0 0.0 0.0 base_link front_base_link 10"/>
 
   <node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.165 -0.905 -1.5875 0.0 -1.4510 velodyne camera 10"/>
 
-  <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.230 -0.905 -1.570795 0.0 -1.466075333 velodyne camera 10"/ -->
+  <!--node pkg="tf" type="static_transform_publisher" name="me_vis_publisher" args="0.0 0.0 0.0 0.0 0.0 0.0 mobileye_pose me_viz 10"/-->
+
+ <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.230 -0.905 -1.570795 0.0 -1.466075333 velodyne camera 10"/ -->
 
   <!-- node pkg="tf" type="static_transform_publisher" name="velodyne_to_camera" args="1.69 0.301 -0.905 -1.5875 -0.035 -1.500 velodyne camera 10"/ -->
 
@@ -99,6 +130,6 @@
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
 
-  <arg name="info_path" default="$(arg autoware_path)/src/autoware/visualization_scw114/liesse_model/param/liesse_XZB70M.yaml"/>
+  <arg name="info_path" default="$(arg autoware_path)/src/autoware/visualization/liesse_model/param/liesse_XZB70M.yaml"/>
   <rosparam command="load" file="$(arg info_path)"/>
 </launch>

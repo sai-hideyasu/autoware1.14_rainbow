@@ -4,8 +4,7 @@
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/NearOncomingObs.h>
 #include <mobileye_560_660_msgs/ObstacleData.h>
-#include <autoware_msgs/TransformMobileyeObstacleList.h>
-#include <tf/transform_listener.h>
+#include <autoware_msgs/TransformMobileyeObstacle.h>
 #include <tf/transform_broadcaster.h>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -17,7 +16,6 @@ private:
 	ros::Subscriber sub_mobileye_obstract_, sub_current_pose_, sub_current_velocity_;
 	ros::Publisher pub_transform_mobileye_obstacle_, pub_oncoming_;
 	ros::Timer timer_;
-	tf::TransformListener listener_;
 	tf::TransformBroadcaster broadcaster_;
 
 	double front_length_;
@@ -57,17 +55,11 @@ private:
 			tf_detction.setRotation(tf::Quaternion::getIdentity());
 
 			std::stringstream str_b, eigen_b;
-			str_b << "m_detect" << obs.obstacle_id;
-			eigen_b << "i_detect" << obs.obstacle_id;
+			str_b << "mob_detect" << obs.obstacle_id;
+			eigen_b << "imob_detect" << obs.obstacle_id;
 			broadcaster_.sendTransform(tf::StampedTransform(tf_detction, nowtime, "me_viz", str_b.str().c_str()));
 			broadcaster_.sendTransform(tf::StampedTransform(tf_eigen, nowtime, "map", eigen_b.str().c_str()));
 
-			/*std::stringstream str_t;
-			str_t << "m_detect" << obs.obstacle_id;
-			tf::StampedTransform tf_detect;
-			listener_.waitForTransform("map", str_t.str().c_str(), nowtime, ros::Duration(0.1));
-			listener_.lookupTransform("map", str_t.str().c_str(), nowtime, tf_detect);
-			std::cout << tf_detect.getOrigin().getX() << "," << map_obs_pose(0) << std::endl;*/
 			autoware_msgs::TransformMobileyeObstacle pubdata;
 			pubdata.header.stamp = ros::Time::now();//msg->header.stamp;
 			pubdata.map_pose.position.x = map_obs_pose[0];//tf_detect.getOrigin().getX();
@@ -182,9 +174,12 @@ public:
 		pub_transform_mobileye_obstacle_ = nh_.advertise<autoware_msgs::TransformMobileyeObstacle>("/transform_mobileye_obstacle", 1);
 		pub_oncoming_ = nh_.advertise<autoware_msgs::NearOncomingObs>("/oncoming_obs", 1);
 
-		sub_mobileye_obstract_ = nh_.subscribe("/parsed_tx/obstacle_data", 1, &MobileyeStopper::callbackMobileyeObstract, this);
-		sub_current_pose_ = nh_.subscribe("/current_pose", 1, &MobileyeStopper::callbackCurrentPose, this);
-		sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &MobileyeStopper::callbackCurrentVelocity, this);
+		sub_mobileye_obstract_ = nh_.subscribe<mobileye_560_660_msgs::ObstacleData>(
+			"/parsed_tx/obstacle_data", 1, &MobileyeStopper::callbackMobileyeObstract, this);
+		sub_current_pose_ = nh_.subscribe<geometry_msgs::PoseStamped>(
+			"/current_pose", 1, &MobileyeStopper::callbackCurrentPose, this);
+		sub_current_velocity_ = nh_.subscribe<geometry_msgs::TwistStamped>(
+			"/current_velocity", 1, &MobileyeStopper::callbackCurrentVelocity, this);
 
 		timer_ = nh_.createTimer(ros::Duration(0.1), &MobileyeStopper::callbackTimer, this);
 

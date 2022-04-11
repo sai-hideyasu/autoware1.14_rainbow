@@ -93,11 +93,20 @@ subs :
         desc : mobileye
         probe:
         run  : roslaunch runtime_manager mobileye.launch
+        param: mobileye
       - name : mobileye(no bridge)
         desc : mobileye(no bridge)
         probe:
         run  : roslaunch runtime_manager mobileye_no_bridge.launch
-
+      - name : esr
+        desc : esr
+        probe:
+        run  : roslaunch runtime_manager esr.launch
+        param: esr
+      - name : esr(no bridge)
+        desc : esr(no bridge)
+        probe:
+        run  : roslaunch runtime_manager esr_no_bridge.launch
   - name : GNSS
     desc : GNSS desc sample
     subs :
@@ -1987,4 +1996,26 @@ params :
       cmd_param :
         dash        : ''
         delim       : ':='
+        delim       : ':='
+
+  - name  : mobileye
+    vars  :
+    - name  : can_hardware_id
+      label : can_hardware_id
+      desc  : can_hardware_id
+      kind  : str
+      v     : '40461'
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : esr
+    vars  :
+    - name  : can_hardware_id
+      label : can_hardware_id
+      desc  : can_hardware_id
+      kind  : str
+      v     : '40464'
+      cmd_param :
+        dash        : ''
         delim       : ':='

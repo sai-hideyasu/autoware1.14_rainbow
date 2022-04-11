@@ -9,6 +9,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   mobileye_560_660_msgs
   geometry_msgs
+  radar_msgs
+  shape_msgs
+  derived_object_msgs
 )
 
 add_message_files(
@@ -89,7 +92,8 @@ add_message_files(
     AvoidanceLaneInfo.msg
     AvoidanceLaneInfoList.msg
     TransformMobileyeObstacle.msg
-    TransformMobileyeObstacleList.msg
+    TransformEsrObstracle.msg
+    TransformEsrObstracleList.msg
     AutoRouteList.msg
     AutoRouteLoopCount.msg
     GnssTimeDiffCount.msg
@@ -122,6 +126,9 @@ generate_messages(
     sensor_msgs
     std_msgs
     mobileye_560_660_msgs
+    radar_msgs
+    shape_msgs
+    derived_object_msgs
 )
 
 catkin_package(

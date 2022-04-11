@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="esr_frame_id" default="esr_1" />
+  <arg name="esr_upside_down" default="false" />
+  <arg name="viz_mature_tracks_only" default="false" />
+  <arg name="use_kvaser" default="true" />
+  <arg name="kvaser_hardware_id" default="40464" />
+  <arg name="kvaser_circuit_id" default="0" />
+  <arg name="use_socketcan" default="false" />
+  <arg name="socketcan_device" default="can0" />
+  <arg name="namespace" default="esr" />
+
+  <node pkg="delphi_esr" type="delphi_esr_can" name="delphi_esr_can" ns="$(arg namespace)">
+    <param name="sensor_frame_id" value="$(arg esr_frame_id)"/>
+    <param name="sensor_upside_down" value="$(arg esr_upside_down)"/>
+    <!-- removes the noise of new tracks in rviz and only vizualizes the mature tracks --> 
+    <param name="viz_mature_tracks_only" value="$(arg viz_mature_tracks_only)"/>
+  </node>
+</launch>
+
