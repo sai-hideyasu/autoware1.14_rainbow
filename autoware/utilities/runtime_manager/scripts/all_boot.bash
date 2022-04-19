@@ -261,6 +261,45 @@ roslaunch waypoint_planner local_waypoint_adjustment.launch &
 sleep 3
 echo "currency : local_waypoint_adjustment"
 
+<< COMMENTOUT
+#Set /config/esr_tracker
+rostopic pub /config/esr_tracker autoware_config_msgs/ConfigEsrTracker "header:
+  seq: 0
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+judg_obj_pose_y: 1.5
+obs_delete_time: 1
+min_free_running_distance: 3
+pose_variance_th: 3.5"  -l &
+sleep 1
+echo "/config/esr_tracker"
+
+#Set mobileye_tracker
+roslaunch waypoint_planner esr_tracker.launch &
+sleep 3
+echo "currency : esr_tracker"
+COMMENTOUT
+
+#Set /config/mobileye_tracker
+rostopic pub /config/mobileye_tracker autoware_config_msgs/ConfigMobileyeTracker "header:
+  seq: 0
+  stamp: {secs: 0, nsecs: 0}
+  frame_id: ''
+judg_obj_pose_y: 1.5
+obs_delete_time: 1.0
+min_free_running_distance: 3.0
+control_cycle: 10.0
+expected_collision_time_th: 3.0
+avoid_collision_corr1: 0.9
+avoid_collision_corr2: 1.0"  -l &
+sleep 1
+echo "/config/mobileye_tracker"
+
+#Set mobileye_tracker
+roslaunch waypoint_planner mobileye_tracker.launch &
+sleep 3
+echo "currency : mobileye_tracker"
+
 #Set /config/temporary_stopper
 rostopic pub __name:=config_temporary_stopper /config/temporary_stopper autoware_config_msgs/ConfigTemporaryStopper "header:
   seq: 0
@@ -275,26 +314,6 @@ fixed_velocity: 0.0
 velocity_limit: 35" -l &
 sleep 1
 echo "currency : /config/temporary_stopper"
-
-#Set /config/mobileye_tracker
-rostopic pub /config/mobileye_tracker autoware_config_msgs/ConfigMobileyeTracker "header:
-  seq: 0
-  stamp: {secs: 0, nsecs: 0}
-  frame_id: ''
-judg_obj_pose_y: 1.5
-obs_delete_time: 1
-min_free_running_distance: 3
-control_cycle: 10.0
-expected_collision_time_th: 3.0
-avoid_collision_corr1: 0.9
-avoid_collision_corr2: 1.0"  -l &
-sleep 1
-echo "/config/mobileye_tracker"
-
-#Set mobileye_tracker
-roslaunch waypoint_planner mobileye_tracker.launch &
-sleep 3
-echo "currency : mobileye_tracker"
 
 #Set temporary_stopper
 roslaunch waypoint_planner temporary_stopper.launch &
@@ -413,9 +432,9 @@ rostopic pub /config/microbus_can autoware_config_msgs/ConfigMicroBusCan "header
 use_position_checker: false
 velocity_limit: 70
 velocity_stop_th: 0.0
-accel_max_i: 1900
+accel_max_i: 1250
 brake_max_i: 520
-k_accel_p_velocity: 0.08
+k_accel_p_velocity: 15.0
 k_accel_i_velocity: 0.16
 k_accel_d_velocity: 0.1
 k_brake_p_velocity: 0.32

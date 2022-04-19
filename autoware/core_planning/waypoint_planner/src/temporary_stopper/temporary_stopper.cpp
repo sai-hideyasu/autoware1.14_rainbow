@@ -505,10 +505,9 @@ private:
 		pub_oncoming_stop_.publish(oncoming_msg);
 
 		std_msgs::Int16 cap_msg;
-		/*cap_msg.data = 250;
-		if(stop_distance < 30) cap_msg.data = 200;
-		if(stop_distance < 10 ) cap_msg.data = 150;*/
-		cap_msg.data = 200;
+		if(stop_distance <= 40 && stop_distance >=20) cap_msg.data = 250;
+		else if(stop_distance <= 20) cap_msg.data = 200;
+		else cap_msg.data = 500;
 		pub_can_stroke_cap_.publish(cap_msg);
 
 		return new_lane;

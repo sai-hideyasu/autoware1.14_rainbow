@@ -196,9 +196,24 @@ add_dependencies(
   ${catkin_EXPORTED_TARGETS}
 )
 
+add_executable(
+  esr_tracker
+  src/esr_tracker/esr_tracker.cpp
+)
+
+target_link_libraries(
+  esr_tracker
+  ${catkin_LIBRARIES}
+)
+
+add_dependencies(
+  esr_tracker
+  ${catkin_EXPORTED_TARGETS}
+)
+
 install(
   TARGETS astar_avoid velocity_set velocity_set_lanelet2 temporary_stopper stopper_distance local_waypoint_adjustment
-  clothoid_avoidance mobileye_transform mobileye_tracker esr_transform
+  clothoid_avoidance mobileye_transform mobileye_tracker esr_transform esr_tracker
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

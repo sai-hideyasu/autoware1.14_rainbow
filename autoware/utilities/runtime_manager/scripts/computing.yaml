@@ -844,6 +844,10 @@ subs :
       - name : local_waypoint_adjustment
         desc : local_waypoint_adjustment desc sample
         cmd  : roslaunch waypoint_planner local_waypoint_adjustment.launch
+      - name : esr_tracker
+        desc : esr_tracker desc sample
+        cmd  : roslaunch waypoint_planner esr_tracker.launch
+        param: esr_tracker
       - name : mobileye_tracker
         desc : mobileye_tracker desc sample
         cmd  : roslaunch waypoint_planner mobileye_tracker.launch
@@ -7805,6 +7809,47 @@ params :
       min  : 1
       max  : 100000
       v    : 1
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+
+  - name  : esr_tracker
+    topic : /config/esr_tracker
+    msg   : ConfigEsrTracker
+    vars  :
+    - name : judg_obj_pose_y
+      desc : judg_obj_pose_y
+      label: judg_obj_pose_y(m)
+      min  : 0.0
+      max  : 5
+      v    : 1.5
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : obs_delete_time
+      desc : obs_delete_time
+      label: obs_delete_time(s)
+      min  : 0.0
+      max  : 5.0
+      v    : 1.0
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : min_free_running_distance
+      desc : min_free_running_distance
+      label: min_free_running_distance(m)
+      min  : 0.0
+      max  : 10
+      v    : 2
+      cmd_param:
+        dash     : ''
+        delim    : ':='
+    - name : pose_variance_th
+      desc : pose_variance_th
+      label: pose_variance_th(m)
+      min  : 0.0
+      max  : 10
+      v    : 3.5
       cmd_param:
         dash     : ''
         delim    : ':='

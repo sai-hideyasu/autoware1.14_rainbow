@@ -90,6 +90,7 @@ from autoware_config_msgs.msg import ConfigWaypointExtension
 from autoware_config_msgs.msg import ConfigArenaSDK
 from autoware_config_msgs.msg import ConfigLocalizerSmoothTransition
 from autoware_config_msgs.msg import ConfigMobileyeTracker
+from autoware_config_msgs.msg import ConfigEsrTracker
 from autoware_config_msgs.msg import ConfigI2V
 from tablet_socket_msgs.msg import mode_cmd
 from tablet_socket_msgs.msg import gear_cmd

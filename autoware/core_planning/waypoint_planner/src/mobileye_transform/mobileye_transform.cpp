@@ -34,7 +34,10 @@ private:
 		//std::cout << msg->obstacle_id << "," << msg->header.stamp.nsec << std::endl;
 		try
 		{
-			ros::Time nowtime = ros::Time::now();
+			ros::Time rosnowtime = ros::Time::now();
+			//double nowtime = rosnowtime.sec + rosnowtime.nsec * 1E-9;
+			//std::cout << std::fixed << std::setprecision(12) << nowtime << std::endl;
+
 			const mobileye_560_660_msgs::ObstacleData &obs = *msg;
 
 			Eigen::Vector3d vec_obs(obs.obstacle_pos_x, obs.obstacle_pos_y, 0);
@@ -57,8 +60,8 @@ private:
 			std::stringstream str_b, eigen_b;
 			str_b << "mob_detect" << obs.obstacle_id;
 			eigen_b << "imob_detect" << obs.obstacle_id;
-			broadcaster_.sendTransform(tf::StampedTransform(tf_detction, nowtime, "me_viz", str_b.str().c_str()));
-			broadcaster_.sendTransform(tf::StampedTransform(tf_eigen, nowtime, "map", eigen_b.str().c_str()));
+			broadcaster_.sendTransform(tf::StampedTransform(tf_detction, rosnowtime, "me_viz", str_b.str().c_str()));
+			broadcaster_.sendTransform(tf::StampedTransform(tf_eigen, rosnowtime, "map", eigen_b.str().c_str()));
 
 			autoware_msgs::TransformMobileyeObstacle pubdata;
 			pubdata.header.stamp = ros::Time::now();//msg->header.stamp;

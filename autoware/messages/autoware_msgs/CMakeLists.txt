@@ -92,8 +92,8 @@ add_message_files(
     AvoidanceLaneInfo.msg
     AvoidanceLaneInfoList.msg
     TransformMobileyeObstacle.msg
-    TransformEsrObstracle.msg
-    TransformEsrObstracleList.msg
+    TransformEsrObstacle.msg
+    TransformEsrObstacleList.msg
     AutoRouteList.msg
     AutoRouteLoopCount.msg
     GnssTimeDiffCount.msg

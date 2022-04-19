@@ -1,0 +1,5 @@
+Header header
+float64 judg_obj_pose_y #正面判定の車両相対Y座標(横方向)
+float64 obs_delete_time #正面オブジェクトの更新がなかった場合にデーターから消去する秒数
+float64 min_free_running_distance #最小車間距離
+float64 pose_variance_th #正面オブジェクトとしてpublishするデータの位置分散しきい値

@@ -1302,17 +1302,17 @@ private:
 		str << "," << (int)can_receive_503_.clutch;
 		name << "," << "can_receive_503_.clutch";
 		str << "," << can_receive_501_.stroke_reply;
-		name << "," << "can_receive_501_.stroke";
+		name << "," << "can_receive_501_.stroke_cmd";
+		str << "," << can_receive_503_.pedal_displacement;
+		name << "," << "can_receive_503_.stroke_joy";
 		str << "," << can_receive_502_.velocity_actual;
-		name << "," << "can_receive_502_.stroke_actual";
+		name << "," << "can_receive_502_.velocity_actual";
 		str << "," << can_receive_502_.angle_deg;
 		name << "," << "can_receive_502_.angle_deg";
 		str << "," << can_receive_502_.angle_deg_acc;
 		name << "," << "can_receive_502_.angle_deg_acc";
 		str << "," << can_receive_502_.angle_target_voltage;
 		name << "," << "can_receive_502_.angle_target_voltage";
-		str << "," << can_receive_503_.pedal_displacement;
-		name << "," << "can_receive_503_.pedal_displacement";
 		str << "," << shhv_.mechanism_steering_main;
 		name << "," << "shhv_.mechanism_steering_angle_main";
 		str << "," << shhv_.mechanism_steering_sub;
@@ -2260,7 +2260,7 @@ private:
 		{
 			routine_str = "acc1";
 			double ret = pid_params.get_stop_stroke_prev();
-			ret -= accle_stroke_step;
+			ret -= 4.0;//accle_stroke_step;
 			if(ret < 0) ret = 0;
 			pid_params.set_stop_stroke_prev(ret);
 			return -ret;
@@ -2281,6 +2281,8 @@ private:
 		//I
 		double e_i;
 		pid_params.plus_accel_diff_sum_velocity(e);
+		e_i = std::min(pid_params.get_accel_diff_sum_velocity(), setting_.accel_max_i);
+		
 		if (pid_params.get_accel_diff_sum_velocity() > setting_.accel_max_i)//この判定はまだ考慮の余地あり
 		{
 			//routine_str = "acc2";
@@ -2312,7 +2314,7 @@ private:
 		}
 
 		//D
-		if(update_current_velocity_ == true)
+		if(update_current_velocity_ == true)//現在速度が更新された場合に実行
 		{
 			e_d_ = e - pid_params.get_accel_e_prev_velocity();
 			update_current_velocity_ = false;
@@ -2320,7 +2322,8 @@ private:
 
 		double target_accel_stroke = setting_.k_accel_p_velocity * e +
 		       setting_.k_accel_i_velocity * e_i +
-		       setting_.k_accel_d_velocity * e_d_;
+		       setting_.k_accel_d_velocity * e_d_+
+			   100;
 		pid_params.set_accel_e_prev_velocity(e);
 
 		double ret = target_accel_stroke;
@@ -2336,6 +2339,7 @@ private:
 			if(tmp < ret) ret = tmp;
 		}
 		std::cout << "acc_ret," << target_accel_stroke << "," << e << "," << setting_.k_accel_p_velocity * e << "," << e_i << "," << setting_.k_accel_i_velocity * e_i << "," << e_d_ << "," << setting_.k_accel_d_velocity * e_d_ << "," << cmd_velocity_kmh << "," << current_velocity_kmh << std::endl;
+
 		//ブレーキをゆっくり踏む
 		/*if(pid_params.get_stroke_prev() < 0.0 && pid_params.get_stroke_prev() < ret)
 		{
@@ -2349,6 +2353,9 @@ private:
 		if(ret > waypoint_param_.accel_stroke_cap) ret = waypoint_param_.accel_stroke_cap;
 		if(ret > accel_stroke_cap_mobileye_) ret = accel_stroke_cap_mobileye_;
 		if(ret > accel_stroke_cap_temporary_stopper_) ret = accel_stroke_cap_temporary_stopper_;
+		std::stringstream str_pub;
+		str_pub << cmd_velocity_kmh - current_velocity_kmh << "," << setting_.k_accel_p_velocity << "*" << e << "=" << setting_.k_accel_p_velocity*e << "," << setting_.k_accel_i_velocity << "*" << e_i << "=" << setting_.k_accel_i_velocity*e_i << "," << setting_.k_accel_d_velocity << "*" << e_d_ << "=" << setting_.k_accel_d_velocity*e_d_ << "," << target_accel_stroke << "," << ret;
+		pub_tmp_.publish(str_pub.str());
 		//if(ret < 100) ret = 100;//下駄を履かせて初速を上げる
 		send_step_ = accle_stroke_step;
 		pid_params.set_stroke_prev(ret);
@@ -2371,10 +2378,6 @@ private:
 			else if(stopD_first_velocity_ > 10) velocity_magn = 1.1;
 			else velocity_magn = 1.1;
 			double stopper_distance_th = current_velocity_kmh * velocity_magn;
-			
-			std::stringstream str_pub;
-			str_pub << "1," << pid_params.get_stroke_prev() << "," << stopper_distance_.distance << "," << stopper_distance_th << "," << current_velocity_kmh - cmd_velocity_kmh;
-			pub_tmp_.publish(str_pub.str());
 
 			if(pid_params.get_stroke_prev() > 0
 				&& (stopper_distance_.distance == -1 || stopper_distance_.distance > stopper_distance_th)
@@ -2387,10 +2390,6 @@ private:
 		}
 		else//前方車両を追跡している
 		{
-			std::stringstream str_pub;
-			str_pub << "2," << pid_params.get_stroke_prev() << "," << car_cruise_status_.expected_collision_time << "," << current_velocity_kmh - cmd_velocity_kmh;
-			pub_tmp_.publish(str_pub.str());
-
 			if(pid_params.get_stroke_prev() > 0 //&& stopper_distance_.distance == -1
 				&& car_cruise_status_.expected_collision_time >= 10
 				//&& current_velocity_kmh - cmd_velocity_kmh <= 10)
@@ -2411,7 +2410,7 @@ private:
 //	const double distance_margin = 1.0;	//!< stopDとの距離の乖離の余裕
 	const double acceleration_margin = 0.1;	//!< 理想加速度との乖離の余裕
 	const double brake_i_min = 0.1;	//!< brake_iの最小値(appで変更できるようにしたほうが良い)
-	const double brake_i_max = 0.45;	//!< brake_iの最大値(appで変更できるようにしたほうが良い)
+	const double brake_i_max = 0.47;//0.45;	//!< brake_iの最大値(appで変更できるようにしたほうが良い)
 	const int section_cnt = 5;//10;	//!< 移動平均区間
 	//!< ここまで	okanuma
 	double _brake_stroke_pid_control(double current_velocity_kmh, double cmd_velocity_kmh, double acceleration, std::string &routine_str)
@@ -2854,8 +2853,12 @@ pub_tmp_.publish(str_ret);*/
 			//停止線での加速判定 0.75は40km/hで走った場合に30m前で加速を止める
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity * 0.75 : accel_avoidance_distance_min_;
 
+			/*std::stringstream str_pub;
+			str_pub << "tmp," << std::boolalpha << checkMobileyeObstacleStop(nowtime) << "," << fabs(cmd_velocity) << ">" << current_velocity << "," << current_velocity + setting_.acceptable_velocity_variation << "<" << setting_.velocity_limit << "," << stopper_distance_.distance << "," << accel_mode_avoidance_distance << "," << in_accel_mode_;
+			pub_tmp_.publish(str_pub.str());*/
+
 			std::cout << "velocity hikaku : " << cmd_velocity << "," << current_velocity << std::endl;
-			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_.distance << "," << in_accel_mode_ << std::endl;
+			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_.distance << "," << in_accel_mode_ << "," << std::endl;
 			if (checkMobileyeObstacleStop(nowtime) == false
 					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
 			        && current_velocity < setting_.velocity_limit
@@ -3271,7 +3274,7 @@ public:
 		sub_cruse_velocity_ = nh_.subscribe("/cruse_velocity", 10, &kvaser_can_sender::callbackCruseVelocity, this);
 		sub_mobileye_frame_ = nh.subscribe("/can_tx", 10 , &kvaser_can_sender::callbackMobileyeCan, this);
 		sub_mobileye_obstacle_data_ = nh.subscribe("/use_mobileye_obstacle", 10 , &kvaser_can_sender::callbackMobileyeObstacleData, this);
-		sub_front_mobileye_car_ = nh.subscribe("/mobileye_tracker/front_car", 10 , &kvaser_can_sender::callbackFrontMobileyeCar, this);
+		sub_front_mobileye_car_ = nh.subscribe("/mobileye_tracker/front_mobileye", 10 , &kvaser_can_sender::callbackFrontMobileyeCar, this);
 		sub_temporary_fixed_velocity_ = nh.subscribe("/temporary_fixed_velocity", 10 , &kvaser_can_sender::callbackTemporaryFixedVelocity, this);
 		sub_gnss_time_ = nh.subscribe("/gnss_time", 10 , &kvaser_can_sender::callbackGnssTime, this);
 		sub_log_write_ = nh.subscribe("/microbus/log_on", 10 , &kvaser_can_sender::callbackLogWrite, this);

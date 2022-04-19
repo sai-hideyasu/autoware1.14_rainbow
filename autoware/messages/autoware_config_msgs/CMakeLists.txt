@@ -49,6 +49,7 @@ add_message_files(
     ConfigMicroBusCan.msg
     ConfigTemporaryStopper.msg
     ConfigMobileyeTracker.msg
+    ConfigEsrTracker.msg
     ConfigCurrentVelocityConversion.msg
     ConfigEstimateToBaselink.msg
     ConfigLookAheadRatioMagn.msg

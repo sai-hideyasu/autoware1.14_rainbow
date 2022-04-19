@@ -3,6 +3,6 @@
   </node>
 
   <node pkg="waypoint_planner" type="mobileye_tracker" name="mobileye_tracker" output="log">
-    <remap from="/safety_waypoints" to="/position_adjustment_waypoints" />
+    <!--remap from="/safety_waypoints" to="/position_adjustment_waypoints" /-->
   </node>
 </launch>

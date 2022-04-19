@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <autoware_msgs/TransformEsrObstracleList.h>
+#include <autoware_msgs/TransformEsrObstacleList.h>
 #include <derived_object_msgs/ObjectWithCovarianceArray.h>
 #include <tf/transform_broadcaster.h>
 #include <Eigen/Dense>
@@ -24,9 +24,12 @@ private:
 
 	void callbackEsrObjects(const derived_object_msgs::ObjectWithCovarianceArray::ConstPtr &msg)
 	{
-		ros::Time nowtime = ros::Time::now();
-		autoware_msgs::TransformEsrObstracleList pubmsg;
-		pubmsg.header.stamp = nowtime;
+		ros::Time rosnowtime = ros::Time::now();
+		//double nowtime = rosnowtime.sec + rosnowtime.nsec * 1E-9;
+		//std::cout << std::fixed << std::setprecision(6) << nowtime << std::endl;
+
+		autoware_msgs::TransformEsrObstacleList pubmsg;
+		pubmsg.header.stamp = rosnowtime;
 
 		for(const derived_object_msgs::ObjectWithCovariance &esr : msg->objects)
 		{
@@ -39,8 +42,8 @@ private:
 			Eigen::Affine3d affine_cur = tl_cur * qua_cur;
 			Eigen::Vector3d map_obs_pose = affine_cur * vec_base_to_obs;
 
-			autoware_msgs::TransformEsrObstracle obsmsg;
-			obsmsg.header.stamp = nowtime;
+			autoware_msgs::TransformEsrObstacle obsmsg;
+			obsmsg.header.stamp = rosnowtime;
 			obsmsg.map_pose.position.x = map_obs_pose[0];//tf_detect.getOrigin().getX();
 			obsmsg.map_pose.position.y = map_obs_pose[1];//tf_detect.getOrigin().getY();
 			obsmsg.map_pose.position.z = map_obs_pose[2];//tf_detect.getOrigin().getZ();
@@ -52,7 +55,7 @@ private:
 			obsmsg.velocity_mps.linear.x += current_velocity_.twist.linear.x;
 			obsmsg.velocity_mps.linear.y += current_velocity_.twist.linear.y;
 			obsmsg.orig_data = esr;
-			pubmsg.obstracles.push_back(obsmsg);
+			pubmsg.obstacles.push_back(obsmsg);
 
 			/*tf::Transform tf_eigen;
 			tf_eigen.setOrigin(tf::Vector3(map_obs_pose[0], map_obs_pose[1], map_obs_pose[2]));
@@ -123,7 +126,7 @@ public:
 		affine_btomo_ = (tl_btom * rot_z_btom * rot_y_btom * rot_x_btom);
 
 		nh_.param<double>("/vehicle_info/front_bumper_to_baselink", front_length_, 3.935);
-		pub_transform_esr_obstacles_ = nh_.advertise<autoware_msgs::TransformEsrObstracleList>("/transform_esr_obstacles", 1);
+		pub_transform_esr_obstacles_ = nh_.advertise<autoware_msgs::TransformEsrObstacleList>("/transform_esr_obstacles", 1);
 
 		sub_esr_objects_ = nh_.subscribe<derived_object_msgs::ObjectWithCovarianceArray>(
 			"/esr/as_tx/objects", 1, &EsrTransform::callbackEsrObjects, this);

@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="waypoint_planner" type="esr_transform" name="esr_transform" output="log">
+  </node>
+
+  <node pkg="waypoint_planner" type="esr_tracker" name="esr_tracker" output="log">
+  </node>
+</launch>
