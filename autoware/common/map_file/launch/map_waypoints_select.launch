@@ -4,7 +4,7 @@
   <arg name="outpath" default="tmp/pcd_data.pcd" /> <!--PCDファイル出力先-->
   <arg name="distance_th" default="100.0" /> <!--各waypoint座標に対してこの数値以内のMAP座標を選出する-->
   <arg name="start_id" default="0" /> <!--map点選別に使用するwaypointのstartID-->
-  <arg name="end_if" default="100000" /> <!--map点選別に使用するwaypointのendID-->
+  <arg name="end_id" default="100000" /> <!--map点選別に使用するwaypointのendID-->
 
   <node pkg="map_file" type="map_waypoints_select" name="map_waypoints_select" >
     <param name="outpath" value="$(arg outpath)" />

@@ -2189,10 +2189,9 @@ private:
 
 		//if(current_velocity > 5)
 		{
-			/*if(current_velocity < minvel) stroke_kagen = 200;
+			if(current_velocity < minvel) stroke_kagen = 200;
 			else if(current_velocity < maxvel) stroke_kagen = 175;
-			else stroke_kagen = 150;*/
-			stroke_kagen = 200;
+			else stroke_kagen = 150;
 		}
 		//else stroke_kagen = 0;
 		/*if(current_velocity > maxvel) stroke_kagen = maxsrk;
@@ -2212,7 +2211,7 @@ private:
 		const double minvel = 10;
 		const double maxvel = 20;
 		const double minsrk = 0;
-		double maxsrk = (stopper_distance_.distance != -1 && stopper_distance_.fixed_velocity <= 10) ? 1 : 190;//150;
+		double maxsrk = (stopper_distance_.distance != -1 && stopper_distance_.fixed_velocity <= 10) ? 1 : 150;
 		double stroke_kagen;
 		if(current_velocity > maxvel) stroke_kagen = maxsrk;
 		else if(current_velocity < minvel) stroke_kagen = minsrk;
@@ -2666,7 +2665,7 @@ private:
 			}
 			else if(stopper_distance_.distance >= 0 && stopper_distance_.distance <= setting_.stopper_distance3)
 			{
-				if(current_velocity_kmh < 8.0)
+				if(current_velocity_kmh < 5.0 || stopper_distance_.distance == 0)
 				{
 					//if(temporary_fixed_velocity_ == 0)
 					if(stopper_distance_.fixed_velocity == 0 || stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)

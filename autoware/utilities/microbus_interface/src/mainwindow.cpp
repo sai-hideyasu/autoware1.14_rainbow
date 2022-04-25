@@ -322,6 +322,9 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 	sub_oncoming_obs_ = nh.subscribe("/oncoming_obs", 10 , &MainWindow::callbackOncomingObs, this);
 	sub_steer_proofreading_main_ = nh.subscribe("/steer_proofreading/main", 10 , &MainWindow::callbackSteerProofreadingMain, this);
 	sub_steer_proofreading_base_ = nh.subscribe("/steer_proofreading/base", 10 , &MainWindow::callbackSteerProofreadingBase, this);
+	sub_front_mobileye_ = nh.subscribe("/mobileye_tracker/front_mobileye", 10 , &MainWindow::callbackFrontMobileye, this);
+	sub_mobileye_cmd_param_ = nh.subscribe("/mobileye_tracker/cmd_param", 10 , &MainWindow::callbackMobileyeCmdParam, this);
+	sub_tracking_type_ = nh.subscribe("/mobileye_tracker/track_pattern", 10 , &MainWindow::callbackTrackingType, this);
 
 	can_status_.angle_limit_over = can_status_.position_check_stop = true;
 	error_text_lock_ = false;
@@ -1524,6 +1527,20 @@ void MainWindow::window_updata()
 		else
 			ui->tx4_panel_view_back->setText("");
 	}
+
+	//mobileye
+	{
+		std::stringstream ss1, ss2, ss3;
+		ss1 << std::fixed << std::setprecision(2) << mobileye_front_car_.velocity_mps * 3.6;
+		ui->li_front_car_velocity->setText(ss1.str().c_str());
+		ui->li_tracking_type->setText(tracking_type_.c_str());
+
+		ss2 << std::fixed << std::setprecision(2) << mobileye_cmd_param_.L0;
+		ui->li_front_car_distance->setText(ss2.str().c_str());
+
+		ss3 << std::fixed << std::setprecision(2) << mobileye_cmd_param_.Lt_RSS;
+		ui->li_front_car_responsibility_distance->setText(ss3.str().c_str());
+	}
 }
 
 void MainWindow::callbackConfig(const autoware_config_msgs::ConfigMicroBusCan &msg)
@@ -2084,6 +2101,21 @@ void MainWindow::callbackPopupSignal(const autoware_msgs::InterfacePopupSignal::
 		dialog_popup_signal_->blinkerCessation();
 		publish_blinker_stop();
 	}
+}
+
+void MainWindow::callbackFrontMobileye(const autoware_msgs::TransformMobileyeObstacle::ConstPtr &msg)
+{
+	mobileye_front_car_ = *msg;
+}
+
+void MainWindow::callbackMobileyeCmdParam(const autoware_msgs::MobileyeCmdParam::ConstPtr &msg)
+{
+	mobileye_cmd_param_ = *msg;
+}
+
+void MainWindow::callbackTrackingType(const std_msgs::String::ConstPtr &msg)
+{
+	tracking_type_ = msg->data;
 }
 
 void MainWindow::publish_emergency_clear()

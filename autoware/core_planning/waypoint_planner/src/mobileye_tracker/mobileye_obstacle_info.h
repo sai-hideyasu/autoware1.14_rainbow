@@ -2,7 +2,7 @@
 class MobileyeObstacleInfo
 {
 public:
-	const static size_t FORREGROUND_VELOCITY_LIST_SIZE = 20; //!< 前方車両速度listの最大サイズ
+	const static size_t FORREGROUND_VELOCITY_LIST_SIZE = 10; //!< 前方車両速度listの最大サイズ
 private:
 	std::vector<autoware_msgs::TransformMobileyeObstacle> obs_list_; //!< 前方車両のリスト
 	double obs_velocity_ave_; //!< 前方車両絶対速度の平均
@@ -93,9 +93,45 @@ public:
 		return getObsAgeTime(obs_list_.size()-1);
 	}
 
-	double getVelocityAve() const
+	double getLatestVelocityMps() const
+	{
+		return obs_list_[obs_list_.size()-1].velocity_mps;
+	}
+
+	double getVelocityMpsAve() const
 	{
 		return obs_velocity_ave_;
+	}
+
+	double getVelocityMpsLeastSquares() const
+	{
+		if(obs_list_.size() == 0) return 0;
+
+		double time_ave = 0, vel_ave = 0;
+		ros::Time rosfirsttime = obs_list_[0].header.stamp;
+
+		for(const autoware_msgs::TransformMobileyeObstacle &obs : obs_list_)
+		{
+			ros::Duration rosobstime = obs.header.stamp - rosfirsttime;
+			double obstime = rosobstime.sec + rosobstime.nsec * 1E-9;
+			time_ave += obstime;
+			vel_ave += obs.velocity_mps;
+		}
+		time_ave /= obs_list_.size();
+		vel_ave /= obs_list_.size();
+
+		double bunsi=0, bunbo=0;
+		for(const autoware_msgs::TransformMobileyeObstacle &obs : obs_list_)
+		{
+			ros::Duration rosobstime = obs.header.stamp - rosfirsttime;
+			double obstime = rosobstime.sec + rosobstime.nsec * 1E-9;
+			double x = obstime - time_ave;
+			double y = obs.velocity_mps - vel_ave;
+			bunsi += x * y;
+			bunbo += x * x;
+		}
+
+		return bunsi/bunbo;
 	}
 
 	double getAccAve() const
@@ -103,7 +139,7 @@ public:
 		return obs_acc_ave_;
 	}
 
-	double getObsRelativeVelAve() const
+	double getObsRelativeVelMpsAve() const
 	{
 		return obs_relative_vel_ave_;
 	}

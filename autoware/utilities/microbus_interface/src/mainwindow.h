@@ -52,6 +52,8 @@
 #include <autoware_msgs/InterfacePopupSignal.h>
 #include <autoware_msgs/InterfacePopupReturn.h>
 #include <autoware_msgs/NearOncomingObs.h>
+#include <autoware_msgs/TransformMobileyeObstacle.h>
+#include <autoware_msgs/MobileyeCmdParam.h>
 #include <autoware_can_msgs/SteerProofreading.h>
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -157,6 +159,9 @@ private:
 	ros::Subscriber sub_oncoming_obs_;//対向車が存在するか？
 	ros::Subscriber sub_steer_proofreading_main_;//steer自動校正通知(MAIN)
 	ros::Subscriber sub_steer_proofreading_base_;//steer自動校正通知(BASE)
+	ros::Subscriber sub_front_mobileye_;//mobileyeの前方車両情報
+	ros::Subscriber sub_mobileye_cmd_param_;//mobileye_trackerノードからpublishされる追跡用情報
+	ros::Subscriber sub_tracking_type_;//前方車両追跡時の追従方法
 
 	void callbackCan501(const autoware_can_msgs::MicroBusCan501 &msg);//マイコン応答ID501
 	void callbackCan502(const autoware_can_msgs::MicroBusCan502 &msg);//マイコン応答ID502
@@ -199,7 +204,9 @@ private:
 	void callbackOncomingObs(const autoware_msgs::NearOncomingObs::ConstPtr &msg);
 	void callbackSteerProofreadingMain(const autoware_can_msgs::SteerProofreading::ConstPtr &msg);
 	void callbackSteerProofreadingBase(const autoware_can_msgs::SteerProofreading::ConstPtr &msg);
-
+	void callbackFrontMobileye(const autoware_msgs::TransformMobileyeObstacle::ConstPtr &msg);
+	void callbackMobileyeCmdParam(const autoware_msgs::MobileyeCmdParam::ConstPtr &msg);
+	void callbackTrackingType(const std_msgs::String::ConstPtr &msg);
 	//void runWaypointsNode(std::string branch);
 
 	autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
@@ -250,6 +257,9 @@ private:
 	uint16_t rs232_steer_voltage_straight_;//ステア自動校正用のサブ電圧レンジ範囲内での、直線走行時の電圧値
 	std::string record_topic_list_;//rosbag recordするトピック一覧(カンマ区切り)
 	bool rosbag_write_flag_;//rosbag記録中か？
+	autoware_msgs::TransformMobileyeObstacle mobileye_front_car_;//mobileyeの前方車両情報
+	autoware_msgs::MobileyeCmdParam mobileye_cmd_param_;//mobileye_trackerノードからpublishされる追跡用情報
+	std::string tracking_type_;////前方車両追跡時の追従方法
 
 	//タイマー
 	ros::Time timer_error_lock_;

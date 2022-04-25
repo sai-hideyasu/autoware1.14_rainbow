@@ -95,7 +95,7 @@ private:
 			else if(waypoint_param.object_stop_line > 0)
 			{
 				pubmsg.distance = dis - front_bumper_to_baselink_ + waypoint_param.stop_line_adjustment;
-				pubmsg.send_process = autoware_msgs::StopperDistance::TEMPORARY_STOPPER;
+				pubmsg.send_process = autoware_msgs::StopperDistance::OBSTACLE;
 				pubmsg.fixed_velocity = temporary_fixed_velocity_;
 				if(pubmsg.distance < 0) pubmsg.distance = 0;
 				break;

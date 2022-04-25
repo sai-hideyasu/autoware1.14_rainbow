@@ -97,6 +97,7 @@ roslaunch gnss_localizer gnss_matching.launch namespace1:=/nmea2tfpose_RTK1 name
 sleep 3
 echo "currency : gnss_selector and gnss_localizer"
 
+<< COMMENTOUT
 #Set /config/ndt
 rostopic pub __name:=config_ndt /config/ndt autoware_config_msgs/ConfigNDT "header:
   seq: 0
@@ -124,6 +125,7 @@ echo "currency : /config/ndt"
 roslaunch lidar_localizer ndt_matching.launch method_type:=2 use_gnss:=1 use_odom:=False use_imu:=False imu_upside_down:=False imu_topic:=/imu_raw queue_size:=1 offset:=linear get_height:=True use_local_transform:=False sync:=False output_log_data:=False gnss_reinit_fitness:=500 &
 sleep 3
 echo "currency : ndt"
+COMMENTOUT
 
 #Set /config/can2odom
 rostopic pub __name:=config_can2odom /config/can2odom autoware_config_msgs/ConfigCanOdometry "header:

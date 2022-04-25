@@ -5,7 +5,8 @@
   <arg name="x" default="6.2"/>
   <arg name="y" default="0.0"/>
   <arg name="z" default="2.5"/>
-  <arg name="yaw" default="3.13759"/>
+  <!--arg name="yaw" default="3.03759"/-->
+  <arg name="yaw" default="3.095"/>
   <arg name="pitch" default="0.0"/>
   <arg name="roll" default="0.0"/>
   <arg name="frame_id" default="base_link"/>
