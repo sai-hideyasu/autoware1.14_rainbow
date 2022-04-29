@@ -7,6 +7,7 @@ float64 Lt_prime #目標車間距離(先行車両から計算した車間距離)
 float64 L0 #現在車間距離
 float64 L0_Lt #現在の速度で止まれる最短の距離
 float64 Lt_RSS #RSSで計算した車間距離
+float64 obstacle_pos_x_diff #今回の前方車両距離と前回の前方車両距離の差分 前回がない場合はfloat64MAX
 float64 cur_space
 float64 front_space
 float64 current_velocity #自車両の速度

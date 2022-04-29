@@ -895,7 +895,7 @@ private:
 			switch(stopper_distance_.send_process)
 			{
 				case autoware_msgs::StopperDistance::TEMPORARY_STOPPER:
-					if(-acceleration2_twist_ > config_temporary_stopper_.deceleration) plus_e = -e;
+					if(-acceleration2_twist_ < config_temporary_stopper_.acceleration) plus_e = -e;
 					else plus_e = e;
 					break;
 				case autoware_msgs::StopperDistance::OBSTACLE:

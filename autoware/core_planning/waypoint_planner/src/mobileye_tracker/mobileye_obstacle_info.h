@@ -10,6 +10,7 @@ private:
 	double obs_relative_acc_ave_; //!< 前方車両相対加速度の平均
 	double obs_acc_ave_; //!< 前方車両絶対加速度の平均
 	double obs_relative_pos_x_ave_; //!< 前方車両相対x位置の平均
+	double obs_relative_pos_x_diff_ave_; //!< 前方車両相対x位置の差分の平均 データが１つしかない場合はDBL_MAX
 
 	double mathVelAve()
 	{
@@ -17,17 +18,26 @@ private:
 		obs_relative_vel_ave_ = 0;
 		obs_relative_acc_ave_ = 0;
 		obs_relative_pos_x_ave_ = 0;
+		obs_relative_pos_x_diff_ave_ = (obs_list_.size()<2) ? DBL_MAX : 0;
 
-		for(const autoware_msgs::TransformMobileyeObstacle &obs : obs_list_)
+		//for(const autoware_msgs::TransformMobileyeObstacle &obs : obs_list_)
+		for(int i=0; i<obs_list_.size(); i++)
 		{
+			const autoware_msgs::TransformMobileyeObstacle &obs = obs_list_[i];
 			vel_ave_ += obs.velocity_mps;
 			obs_relative_vel_ave_ += obs.orig_data.obstacle_rel_vel_x;
 			obs_relative_acc_ave_ += obs.orig_data.object_accel_x;
 			obs_relative_pos_x_ave_ += obs.orig_data.obstacle_pos_x;
+			if(i >= 1)
+			{
+				const autoware_msgs::TransformMobileyeObstacle &prev_obs = obs_list_[i-1];
+				obs_relative_pos_x_diff_ave_ += obs.orig_data.obstacle_pos_x - prev_obs.orig_data.obstacle_pos_x;
+			}
 		}
 		obs_relative_vel_ave_ /= obs_list_.size();
 		obs_relative_acc_ave_ /= obs_list_.size();
 		obs_relative_pos_x_ave_ /= obs_list_.size();
+		obs_relative_pos_x_diff_ave_ /= obs_list_.size();
 		return vel_ave_ / obs_list_.size();
 	}
 public:
@@ -75,6 +85,11 @@ public:
 	autoware_msgs::TransformMobileyeObstacle getLatestObs() const
 	{
 		return obs_list_[obs_list_.size()-1];
+	}
+
+	autoware_msgs::TransformMobileyeObstacle getLatestPrevObs() const
+	{
+		return obs_list_[obs_list_.size()-2];
 	}
 
 	double getObsAgeTime(const int index) const
@@ -152,6 +167,11 @@ public:
 	double getRelativePoseXAve() const
 	{
 		return obs_relative_pos_x_ave_;
+	}
+
+	double getRelativePoseXDiffAve() const
+	{
+		return obs_relative_pos_x_diff_ave_;
 	}
 
 	void clear()

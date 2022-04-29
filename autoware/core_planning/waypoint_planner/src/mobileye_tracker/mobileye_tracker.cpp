@@ -13,6 +13,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/TwistStamped.h>
+#include <visualization_msgs/Marker.h>
 #include <autoware_config_msgs/ConfigMobileyeTracker.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/TransformMobileyeObstacle.h>
@@ -22,6 +23,26 @@
 #include <Eigen/Geometry>
 #include <tf/transform_datatypes.h>
 #include "mobileye_obstacle_info.h"
+
+//waypoint２点と車両位置のy方向距離を計算
+double y_distanbce(const geometry_msgs::Point pose1, const geometry_msgs::Point pose2, const geometry_msgs::Point cur)
+{
+	double x1 = pose1.x, x2 = pose2.x;
+	double y1 = pose1.y, y2 = pose2.y;
+	double a = y2 - y1;
+	double b = x1 - x2;
+	double c = - x1 * y2 + y1 * x2;
+
+	//double x0 = current_pose_.pose.position.x, y0 = current_pose_.pose.position.y;
+	double x0 = cur.x, y0 = cur.y;
+	double db = sqrt(a * a + b * b);
+	if(db == 0)
+	{
+		std::cout << "pose1とpose2が同じ" << std::endl;
+		return 998;
+	}
+	return (a * x0 + b * y0 + c) / db;
+}
 
 double euclideanDistance(const geometry_msgs::Point p1, const geometry_msgs::Point p2)
 {
@@ -140,9 +161,10 @@ private:
 	const static double MAX_DECELERATION = 0.9; //!<最大減速度
 	const static int16_t MIN_CAN_ACCEL_STROKE_CAP = 250;//!<CANに通知するアクセルSTROKEキャップの最小値
 	const static int16_t MAX_CAN_ACCEL_STROKE_CAP = 500;//!<CANに通知するアクセルSTROKEキャップの最大値
-	const static double CAN_SEND_TH_KMH = 8.0;//!<アクセルSTROKEキャップ通知の前方車両速度に対するしきい値(時速)
-	const static double CAN_SEND_TH_ACC = 0.3;//!<アクセルSTROKEキャップ通知の相対加速度に対するしきい値(m/s2)
+	const static double CAN_SEND_TH_KMH = 10.0;//8.0;//!<アクセルSTROKEキャップ通知の前方車両速度に対するしきい値(時速)
+	const static double CAN_SEND_TH_ACC = 0.3;//0.3;//!<アクセルSTROKEキャップ通知の相対加速度に対するしきい値(m/s2)
 	const static double CAN_SEND_TH_DISTANCE = 40.0;//!<アクセルSTROKEキャップ通知の前方車両距離に対するしきい値(m)
+	const static double LT_RSS_TH_MAGN = 1.375;//責任車間距離をしきい値として運用する場合の倍率
 
 	//const static double min_free_running_distance_ = 2.0; //!< 最小車間距離
 	//const static double target_deceleration_ = 0.3; //!<目標減速度
@@ -161,6 +183,7 @@ private:
 
 	ros::Subscriber sub_config_;
 	ros::Subscriber sub_waypoints_;
+	ros::Subscriber sub_current_pose_;
 	ros::Subscriber sub_current_velocity_;
 	ros::Subscriber sub_mobileye_obstacle_;//1<mobileyeからの車両情報(1車両ごと)
 	ros::Subscriber sub_target_deceleration_;//!<目標減速度
@@ -173,6 +196,7 @@ private:
 	ros::Publisher pub_line_th_status_;
 	ros::Publisher pub_can_stroke_cap_;//!<CANに通知するアクセルSTROKEキャップ
 	ros::Publisher pub_car_cruise_status_;//!<前方車両追従の情報
+	ros::Publisher pub_front_car_marker_;//前方車両のrviz表示用
 
 	ros::Timer obs_delete_timer_;
 
@@ -217,9 +241,10 @@ private:
 		double Lt_prime = targetFreeSpace(vehicle_ahead_vel, 0.3, delay_time*0.6, config_.min_free_running_distance);
 		double L0_Lt = targetFreeSpace(vehicle_ahead_vel, MAX_DECELERATION, delay_time, config_.min_free_running_distance);
 		double cur_space, front_space;
-		double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_, vehicle_ahead_vel, 0.13, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
+		//double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_, vehicle_ahead_vel, 0.13, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
+		double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_, vehicle_ahead_vel, 0.14, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
 		double L0 = obs_list.getRelativePoseXAve();//経路から計算した距離にすべき？//obs.orig_data.obstacle_pos_x;//前方車両までの距離
-		double cmd_acc = vehicle_ahead_acc + (1.0 / 2.0) * std::pow(relative_vel, 2.0) / (Lt_prime - L0);//(Lt - L0);
+		double cmd_acc = vehicle_ahead_acc + (1.0 / 2.0) * std::pow(relative_vel, 2.0) / (Lt_RSS - L0);//(Lt - L0);
 		double Lt_part1 = (vehicle_ahead_vel-current_vel)*(-(vehicle_ahead_vel-current_vel)/(vehicle_ahead_acc-cmd_acc));
 		double Lt_part2 = 0.5*(vehicle_ahead_acc-cmd_acc)*std::pow(-(vehicle_ahead_vel-current_vel)/(vehicle_ahead_acc-cmd_acc),2.0);
 		double Lt2 = L0 + Lt_part1 + Lt_part2;
@@ -241,6 +266,7 @@ private:
 		cmdacc.L0 = L0;
 		cmdacc.L0_Lt = L0_Lt;
 		cmdacc.Lt_RSS = Lt_RSS;
+		cmdacc.obstacle_pos_x_diff = obs_list.getRelativePoseXDiffAve();
 		cmdacc.cur_space = cur_space;
 		cmdacc.front_space = front_space;
 		cmdacc.current_velocity = current_velocity_ave_;//current_vel;
@@ -299,6 +325,10 @@ private:
 			ros::Duration ros_time_diff = nowtime - velocity0_timer_;
 			double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
 			if(time_diff >= 0.1) ret = TRACKING_STOP;
+		}
+		else if(cmd.L0 > cmd.Lt_RSS * LT_RSS_TH_MAGN)//責任車間距離を基準とした一定距離よりも離れている場合は追跡処理をしない
+		{
+			ret = TRACKING_NO;
 		}
 		else
 		{
@@ -499,7 +529,8 @@ private:
 				{
 					curr_waypoint.waypoint_param.object_stop_line = 1;
 					curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = foreground_mobileye_.getVelocityMpsAve() * 3.6;
-					curr_waypoint.waypoint_param.temporary_deceleration = cmdacc.cmd_acc;
+					curr_waypoint.waypoint_param.temporary_acceleration = cmdacc.cmd_acc;
+					curr_waypoint.waypoint_param.velocity_limit_kmh = 100;
 					break;
 				}
 			}
@@ -513,7 +544,7 @@ private:
 			std::cout << "v02," << current_velocity_ave_ << std::endl;
 			std::cout << "dis," << stop_line_info.distance_ << std::endl;
 			std::cout << "dec_acc," << dec_acc << std::endl;
-			if(dec_acc < 0) dec_acc = 0;
+			//if(dec_acc < 0) dec_acc = 0;
 
 			double distance = 0;
 			//std::cout << "obs_index," << obs_index << std::endl;
@@ -532,7 +563,8 @@ private:
 					curr_waypoint.waypoint_param.object_stop_line = 1;
 					//curr_waypoint.waypoint_param.temporary_deceleration = ;
 					curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = 0;
-					curr_waypoint.waypoint_param.temporary_deceleration = 0.30;//dec_acc;
+					curr_waypoint.waypoint_param.temporary_acceleration = -0.30;//dec_acc;
+					curr_waypoint.waypoint_param.velocity_limit_kmh = 35;
 					break;
 				}
 				else
@@ -549,7 +581,7 @@ private:
 				curr_waypoint.waypoint_param.object_stop_line = 1;
 				//curr_waypoint.waypoint_param.temporary_deceleration = ;
 				curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = 0;
-				curr_waypoint.waypoint_param.temporary_deceleration = 0.30;//dec_acc;
+				curr_waypoint.waypoint_param.temporary_acceleration = -0.30;//dec_acc;
 			}
 		}
 		else if(tracking == TRACKING_DECELERATION1)
@@ -596,6 +628,7 @@ private:
 						curr_waypoint.waypoint_param.object_stop_line = 1;
 						//curr_waypoint.waypoint_param.temporary_deceleration = ;
 						curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = cmd_pass_vel * 3.6;
+						curr_waypoint.waypoint_param.velocity_limit_kmh = 100;
 					}
 					break;
 				}
@@ -645,7 +678,7 @@ private:
 		}
 		else
 		{
-			autoware_msgs::TransformMobileyeObstacle obs = foreground_mobileye_.getLatestObs();
+			/*const autoware_msgs::TransformMobileyeObstacle obs = foreground_mobileye_.getLatestObs();
 			if(obs.velocity_mps <= CAN_SEND_TH_KMH / 3.6
 				&& obs.orig_data.object_accel_x <= CAN_SEND_TH_ACC
 				&& stop_line_info.distance_ <= CAN_SEND_TH_DISTANCE)
@@ -653,7 +686,12 @@ private:
 				accel_stroke_cap.data = MIN_CAN_ACCEL_STROKE_CAP;
 			}
 			else
+				accel_stroke_cap.data = MAX_CAN_ACCEL_STROKE_CAP;*/
+			const autoware_msgs::MobileyeCmdParam cmdacc = mathTargetAcc(foreground_mobileye_);
+			if(cmdacc.L0 > cmdacc.Lt_RSS * LT_RSS_TH_MAGN)
 				accel_stroke_cap.data = MAX_CAN_ACCEL_STROKE_CAP;
+			else
+				accel_stroke_cap.data = MIN_CAN_ACCEL_STROKE_CAP;
 		}
 		pub_can_stroke_cap_.publish(accel_stroke_cap);
 	}
@@ -669,6 +707,11 @@ private:
 		}*/
 		createCarTrackingWaypoints(msg, stop_line_info);
 		publishAccelCanCap(stop_line_info);
+	}
+
+	void callbackCurrentPose(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	{
+		current_pose_ = *msg;
 	}
 
 	void callbackCurrentVelocity(const geometry_msgs::TwistStamped::ConstPtr &msg)
@@ -756,6 +799,10 @@ private:
 			const geometry_msgs::Point way_po = waypoint.pose.pose.position;
 			const geometry_msgs::Point prev_way_po = prev_waypoint.pose.pose.position;
 
+			//経路と自車両のy距離を計算
+			double y_dis = y_distanbce(way_po, prev_way_po, current_pose_.pose.position);
+			//std::cout << "y_dis," << y_dis << "," << way_po.x << "," << prev_way_po.x << "," << current_pose_.pose.position.x << std::endl;
+
 			for(int obscou=0; obscou<mobileye_obstacle_info_list_.size(); obscou++)
 			{
 				const MobileyeObstacleInfo &obs_info = mobileye_obstacle_info_list_[obscou];
@@ -783,6 +830,7 @@ private:
 					&& obs_diff_po_rot.x() >= 0
 					&& obs_diff_po_rot.x() <= way_diff_po_rot.x())
 				{
+					//std::cout << "follwing," << cleft << "," << cright << "," << fleft << "," << fright << "," << y_dis << std::endl;
 					hit_obs_index = obscou;
 					hit_waypoint_index = waycou;
 					x_adj = way_diff_po_rot.x() - obs_diff_po_rot.x();
@@ -824,6 +872,33 @@ private:
 			info.x_adj_ = dis_adj;
 			info.distance_ = dis_sum;
 			pub_front_mobileye_obstacle_.publish(foreground_mobileye_.getLatestObs());
+
+			visualization_msgs::Marker marker;
+			marker.header.frame_id = "map";
+			marker.header.stamp = ros::Time::now();
+			marker.ns = "front_car_mobileye";
+			marker.id = 0;
+
+			marker.type = visualization_msgs::Marker::SPHERE;
+			marker.action = visualization_msgs::Marker::ADD;
+			marker.lifetime = ros::Duration();
+
+			marker.scale.x = 2;
+			marker.scale.y = 2;
+			marker.scale.z = 2;
+			autoware_msgs::TransformMobileyeObstacle front_car = foreground_mobileye_.getLatestObs();
+			marker.pose.position.x = front_car.map_pose.position.x;
+			marker.pose.position.y = front_car.map_pose.position.y;
+			marker.pose.position.z = front_car.map_pose.position.z;
+			marker.pose.orientation.x = 0;
+			marker.pose.orientation.y = 0;
+			marker.pose.orientation.z = 0;
+			marker.pose.orientation.w = 1;
+			marker.color.r = 1.0f;
+			marker.color.g = 0.0f;
+			marker.color.b = 0.0f;
+			marker.color.a = 1.0f;
+			pub_front_car_marker_.publish(marker);
 			return info;
 		}
 		else
@@ -836,6 +911,34 @@ private:
 			autoware_msgs::TransformMobileyeObstacle msg;
 			msg.orig_data.obstacle_id = USHRT_MAX;
 			pub_front_mobileye_obstacle_.publish(msg);
+
+			visualization_msgs::Marker marker;
+			marker.header.frame_id = "map";
+			marker.header.stamp = ros::Time::now();
+			marker.ns = "front_car_mobileye";
+			marker.id = 0;
+
+			marker.type = visualization_msgs::Marker::SPHERE;
+			marker.action = visualization_msgs::Marker::DELETE;
+			marker.lifetime = ros::Duration();
+
+			/*marker.scale.x = 2;
+			marker.scale.y = 2;
+			marker.scale.z = 2;
+			autoware_msgs::TransformMobileyeObstacle front_car = foreground_mobileye_.getLatestObs();
+			marker.pose.position.x = front_car.map_pose.position.x;
+			marker.pose.position.y = front_car.map_pose.position.y;
+			marker.pose.position.z = front_car.map_pose.position.z;
+			marker.pose.orientation.x = 0;
+			marker.pose.orientation.y = 0;
+			marker.pose.orientation.z = 0;
+			marker.pose.orientation.w = 1;
+			marker.color.r = 1.0f;
+			marker.color.g = 0.0f;
+			marker.color.b = 0.0f;
+			marker.color.a = 1.0f;*/
+			pub_front_car_marker_.publish(marker);
+	
 			return info;
 		}
 	}
@@ -885,6 +988,7 @@ public:
 
 		sub_config_ = nh_.subscribe("/config/mobileye_tracker", 10, &CarTrackinig::callbackConfig, this);
 		sub_waypoints_ = nh_.subscribe("/position_adjustment_waypoints", 10, &CarTrackinig::callbackWaypoints, this);
+		sub_current_pose_ = nh_.subscribe("/current_pose", 10, &CarTrackinig::callbackCurrentPose, this);
 		sub_current_velocity_ = nh_.subscribe("/current_velocity", 10, &CarTrackinig::callbackCurrentVelocity, this);
 		sub_mobileye_obstacle_ = nh_.subscribe("/transform_mobileye_obstacle", 10, &CarTrackinig::callbackMobileyeObstacle, this);
 		sub_target_deceleration_ = nh_.subscribe("/car_target_deceleration", 10, &CarTrackinig::callbackTargetDeceleration, this);
@@ -897,6 +1001,7 @@ public:
 		pub_line_th_status_ = nh_.advertise<std_msgs::String>("/mobileye_tracker/line_th_status", 10);
 		pub_can_stroke_cap_ = nh_.advertise<std_msgs::Int16>("/mobileye_tracker/accel_stroke_cap", 10);
 		pub_car_cruise_status_ = nh_.advertise<autoware_msgs::CarCruiseStatus>("/car_cruise_status", 10);
+		pub_front_car_marker_ = nh_.advertise<visualization_msgs::Marker>("/front_car_marker", 10);
 
 		obs_delete_timer_ = nh_.createTimer(ros::Duration(0.1), &CarTrackinig::callbackObsDeleteTimer, this);
 

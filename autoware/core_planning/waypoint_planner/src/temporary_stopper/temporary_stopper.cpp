@@ -23,8 +23,9 @@ struct SelectedLine
 	bool on_object_;
 	bool on_oncoming_;
 	int waypoint_index_;
-	double deceleration_;
+	double acceleration_;
 	double fixed_velocity_;
+	double velocity_limit_;
 };
 
 double euclideanDistanceXY(const geometry_msgs::Point p1, const geometry_msgs::Point p2)
@@ -69,42 +70,72 @@ private:
 	SelectedLine prev_selected_line_;//前回の停止線情報
 	autoware_msgs::WaypointParam waypoint_param_;
 
-	/*autoware_msgs::Lane apply_deceleration(const autoware_msgs::Lane& lane, double deceleration, int start_index,
-										   double fixed_vel, double velocity_limit)
+	autoware_msgs::Lane apply_deceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
+										   size_t fixed_cnt, double fixed_vel, double velocity_limit, double &stop_distance)
 	{
+		double dec = -acceleration;
 		autoware_msgs::Lane l = lane;
+		//std::cout << "fixed cnt:" << fixed_cnt << "," << start_index << "," << lane.waypoints[start_index].waypoint_param.id << "," << fixed_vel << std::endl;
+		if (fixed_cnt == 0)
+		return l;
 
-		l.waypoints[start_index].twist.twist.linear.x = 0;
-
-		for(int i=start_index-1; i>=0; i--)
+		const double vel_th_kmh = 15;
+		double square_vel = fixed_vel * fixed_vel;
+		double distance_sum = 0;
+		double next_v = 0;
+		int i;
+		for (i = start_index; i < l.waypoints.size(); ++i)
 		{
-			double prev_v = l.waypoints[i+1].twist.twist.linear.x;
-			geometry_msgs::Point a = l.waypoints[i+1].pose.pose.position;
+			if (i - start_index < fixed_cnt)
+			{
+				l.waypoints[i].twist.twist.linear.x = fixed_vel;
+				continue;
+			}
+
+			geometry_msgs::Point a = l.waypoints[i - 1].pose.pose.position;
 			geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
-			//distance += hypot(b.x - a.x, b.y - a.y);
-			double distance = hypot(b.x - a.x, b.y - a.y);
-			double v;
-			if(prev_v < 15 / 3.6)
-			{
-				v = std::sqrt(prev_v * prev_v + 2 * deceleration * distance);
-				std::cout << i << "," << v << "," << "," << v * 3.6 << "," << prev_v << "," << deceleration << "," << distance << std::endl;
-			}
-			else
-			{
-				v = prev_v + distance * 0.05;
-			}
-			
+			distance_sum += hypot(b.x - a.x, b.y - a.y);
+
+			double v = sqrt(square_vel + 2 * dec * distance_sum);
+			next_v = v;
+
 			if (v < l.waypoints[i].twist.twist.linear.x)
 			{
-				if(v > velocity_limit) l.waypoints[i].twist.twist.linear.x = velocity_limit;//vがvelocity_limitを超えている場合は、速度をvelocity_limitにする
+				//if(fixed_vel < v) l.waypoints[i].twist.twist.linear.x = v;
+				//else l.waypoints[i].twist.twist.linear.x = fixed_vel;
+				if(velocity_limit < 0) l.waypoints[i].twist.twist.linear.x = v;//速度の最大値がない場合(velocity_limitがマイナス)
+				else if(v > velocity_limit) l.waypoints[i].twist.twist.linear.x = velocity_limit;//vがvelocity_limitを超えている場合は、速度をvelocity_limitにする
 				else l.waypoints[i].twist.twist.linear.x = v;
 			}
+			//else if(reverse_flag == true)//停止線より下側は中断処理をしない
+			//	break;
+
+			if(v > vel_th_kmh / 3.6) break;//速度が一定以上に達したら、経路上速度を直線的変化に変える
 		}
 
-		return l;
-	}*/
+		//速度が一定以上に達したら、経路上速度を直線的変化に変える
+		double prev_v = next_v;
+		for(int j=i+1; j<l.waypoints.size(); ++j)
+		{
+			geometry_msgs::Point a = l.waypoints[i - 1].pose.pose.position;
+			geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
+			double distance = hypot(b.x - a.x, b.y - a.y);
 
-	autoware_msgs::Lane apply_deceleration(const autoware_msgs::Lane& lane, double deceleration, int start_index,
+			double v = prev_v + distance * dec;
+			if(velocity_limit < 0) l.waypoints[i].twist.twist.linear.x = v;//速度の最大値がない場合(velocity_limitがマイナス)
+			else if(v > velocity_limit) l.waypoints[i].twist.twist.linear.x = velocity_limit;//vがvelocity_limitを超えている場合は、速度をvelocity_limitにする
+			else l.waypoints[i].twist.twist.linear.x = v;
+			//l.waypoints[j].twist.twist.linear.x = std::min(v, l.waypoints[j].twist.twist.linear.x);
+
+			distance_sum += distance;
+			dec += 0.1;
+		}
+
+		stop_distance = distance_sum;
+		return l;
+	}
+
+	autoware_msgs::Lane apply_acceleration(const autoware_msgs::Lane& lane, double acceleration, int start_index,
 										   size_t fixed_cnt, double fixed_vel, double velocity_limit, double &stop_distance)
 	{
 		autoware_msgs::Lane l = lane;
@@ -129,88 +160,31 @@ private:
 			geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
 			distance_sum += hypot(b.x - a.x, b.y - a.y);
 
-			double v = sqrt(square_vel + 2 * deceleration * distance_sum);
+			double v = sqrt(square_vel - 2 * acceleration * distance_sum);
 			next_v = v;
 
-			if (v < l.waypoints[i].twist.twist.linear.x)
+			if (v > l.waypoints[i].twist.twist.linear.x)
 			{
-				//if(fixed_vel < v) l.waypoints[i].twist.twist.linear.x = v;
-				//else l.waypoints[i].twist.twist.linear.x = fixed_vel;
-				if(velocity_limit < 0) l.waypoints[i].twist.twist.linear.x = v;//速度の最大値がない場合(velocity_limitがマイナス)
-				else if(v > velocity_limit) l.waypoints[i].twist.twist.linear.x = velocity_limit;//vがvelocity_limitを超えている場合は、速度をvelocity_limitにする
-				else l.waypoints[i].twist.twist.linear.x = v;
+				l.waypoints[i].twist.twist.linear.x = v;
 			}
-			//else if(reverse_flag == true)//停止線より下側は中断処理をしない
-			//	break;
-
-			if(v > vel_th_kmh / 3.6) break;
-		}
-
-		double prev_v = next_v;
-		double dec = deceleration;
-		for(int j=i+1; j<l.waypoints.size(); ++j)
-		{
-			geometry_msgs::Point a = l.waypoints[i - 1].pose.pose.position;
-			geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
-			double distance = hypot(b.x - a.x, b.y - a.y);
-
-			double v = prev_v + distance * dec;
-			l.waypoints[j].twist.twist.linear.x = v;
-
-			distance_sum += distance;
-			dec += 0.1;
 		}
 
 		stop_distance = distance_sum;
 		return l;
 	}
 
-	/*autoware_msgs::Lane apply_decceleration(const autoware_msgs::Lane& lane, double decceleration, int start_index,
-										   size_t fixed_cnt, double fixed_vel)
-	{
-	  autoware_msgs::Lane l = lane;
-	  if(decceleration > 0) 
-		return l;
-	  if (fixed_cnt == 0)
-		return l;
-
-	  double square_vel = fixed_vel * fixed_vel;
-	  double distance = 0;
-	  for (int i = start_index; i > 0; --i)
-	  {
-		if (i > start_index -fixed_cnt)
-		{
-			l.waypoints[i].twist.twist.linear.x = fixed_vel;
-			continue;
-		}
-
-		geometry_msgs::Point a = l.waypoints[i - 1].pose.pose.position;
-		geometry_msgs::Point b = l.waypoints[i].pose.pose.position;
-		distance += hypot(b.x - a.x, b.y - a.y);
-	
-		double v = sqrt(square_vel - 2 * decceleration * distance);
-		std::cout << v << std::endl;
-		if (v < l.waypoints[i].twist.twist.linear.x)
-			l.waypoints[i].twist.twist.linear.x = v;
-		else
-			break;
-	  }
-
-	  return l;
-	}*/
-
 	SelectedLine stop_line_search(autoware_msgs::Lane& way, int start_index)
 	{
 		std_msgs::Int32 dis;
 		dis.data = -1;
 
-		SelectedLine selected = {false, false, false, false, -1, -1, 0};
+		SelectedLine selected = {false, false, false, false, -1, -1, 0, DBL_MAX};
 		for(int i=start_index; i<way.waypoints.size() || i<config_.search_distance; i++)
 		{
 			bool ultrasound_flag = false;
 			if(way.waypoints[i].waypoint_param.signal_stop_line > 0)
 			{
-				if(light_color_ == TRAFFIC_LIGHT_RED || light_color_ == TRAFFIC_LIGHT_YELLOW_RED)
+				/*if(light_color_ == TRAFFIC_LIGHT_RED || light_color_ == TRAFFIC_LIGHT_YELLOW_RED)
 				{
 					selected.on_signal_ = true;
 					if(way.waypoints[i].waypoint_param.signal_stop_line == 1) //左折
@@ -232,8 +206,9 @@ private:
 						way.waypoints[i].waypoint_param.temporary_fixed_velocity_kmh = 0;
 					}
 					if(ultrasound_flag == false) use_ultrasound_ = 0;
-				}
-				//selected.on_signal_ = true;
+				}*/
+				if(light_color_ == TRAFFIC_LIGHT_RED || light_color_ == TRAFFIC_LIGHT_YELLOW_RED)
+					selected.on_signal_ = true;
 			}
 			if(way.waypoints[i].waypoint_param.temporary_stop_line > 0)
 			{
@@ -295,7 +270,8 @@ private:
 				pub_temporary_fixed_velocity_.publish(msg_fixed_velocity);*/
 
 				selected.waypoint_index_ = i;
-				selected.deceleration_ = way.waypoints[i].waypoint_param.temporary_deceleration;
+				selected.acceleration_ = way.waypoints[i].waypoint_param.temporary_acceleration;
+				selected.velocity_limit_ = way.waypoints[i].waypoint_param.velocity_limit_kmh / 3.6;
 				return selected;
 			}
 		}
@@ -347,7 +323,7 @@ private:
 		return;
 	}*/
 
-	autoware_msgs::Lane apply_stopline_deceleration(const autoware_msgs::Lane& lane, double decceleration,
+	autoware_msgs::Lane apply_stopline_deceleration(const autoware_msgs::Lane& lane, double acceleration,
 													int ahead_cnt, int behind_cnt)
 	{
 		std_msgs::Bool oncoming_msg;//対向車で停止したかのフラグをpublish
@@ -483,7 +459,11 @@ private:
 		//double limit_vel = (stop_index.on_object_ == true && stop_index.on_signal_ == false) ? stop_way.waypoint_param.temporary_fixed_velocity / 3.6 : config_.velocity_limit / 3.6;
 		double limit_vel;
 		if(stop_index.on_signal_ == true) limit_vel = config_.velocity_limit / 3.6;
-		else if(stop_index.on_object_ == true) limit_vel = config_.velocity_limit / 3.6;//std::max(10.0 / 3.6, stop_way.waypoint_param.temporary_fixed_velocity / 3.6);
+		else if(stop_index.on_object_ == true)
+		{
+			limit_vel = config_.velocity_limit / 3.6;//std::max(10.0 / 3.6, stop_way.waypoint_param.temporary_fixed_velocity / 3.6);
+			if(stop_index.fixed_velocity_ != DBL_MAX) limit_vel = stop_index.fixed_velocity_;
+		}
 		else if(stop_index.on_temporary_ == true) limit_vel = config_.velocity_limit / 3.6;
 		else if(stop_index.on_oncoming_ == true)
 		{
@@ -492,16 +472,26 @@ private:
 		}
 		else limit_vel = config_.velocity_limit / 3.6;
 
-		double dec = (stop_index.deceleration_ < 0) ? decceleration : stop_index.deceleration_;
+		double acc = (stop_index.acceleration_ == DBL_MAX) ? acceleration : stop_index.acceleration_;
 		double stop_distance;
 		//std::cout << "deceleration," << dec << std::endl;
 		//new_lane = apply_deceleration(new_lane, dec, stop_line_to_baselink_index, fixed_velocity_, limit_vel);
-		new_lane = apply_deceleration(new_lane, dec, stop_line_to_baselink_index, behind_cnt + 1, fixed_velocity_, -1, stop_distance);
-		std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
-		int reverse_stop_index = new_lane.waypoints.size() - stop_line_to_baselink_index - 1;
-		new_lane = apply_deceleration(new_lane, dec, reverse_stop_index, ahead_cnt + 1, fixed_velocity_, limit_vel, stop_distance);
-		std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
-
+		if(acc <= 0)
+		{
+			new_lane = apply_deceleration(new_lane, acc, stop_line_to_baselink_index, behind_cnt + 1, fixed_velocity_, -1, stop_distance);
+			std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
+			int reverse_stop_index = new_lane.waypoints.size() - stop_line_to_baselink_index - 1;
+			new_lane = apply_deceleration(new_lane, acc, reverse_stop_index, ahead_cnt + 1, fixed_velocity_, limit_vel, stop_distance);
+			std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
+		}
+		else
+		{
+			new_lane = apply_acceleration(new_lane, acc, stop_line_to_baselink_index, behind_cnt + 1, fixed_velocity_, -1, stop_distance);
+			std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
+			int reverse_stop_index = new_lane.waypoints.size() - stop_line_to_baselink_index - 1;
+			new_lane = apply_acceleration(new_lane, acc, reverse_stop_index, ahead_cnt + 1, fixed_velocity_, limit_vel, stop_distance);
+			std::reverse(new_lane.waypoints.begin(), new_lane.waypoints.end());
+		}
 		pub_oncoming_stop_.publish(oncoming_msg);
 
 		std_msgs::Int16 cap_msg;
@@ -548,7 +538,7 @@ private:
 
 	void callbackWaypoint(const autoware_msgs::Lane& msg)
 	{
-		autoware_msgs::Lane lane = apply_stopline_deceleration(msg, config_.deceleration,
+		autoware_msgs::Lane lane = apply_stopline_deceleration(msg, config_.acceleration,
 									config_.number_of_zeros_ahead, config_.number_of_zeros_behind);
 		pub_waypoint_.publish(lane);
 	}

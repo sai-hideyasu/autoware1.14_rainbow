@@ -7587,12 +7587,12 @@ params :
       cmd_param:
         dash     : ''
         delim    : ':='
-    - name : deceleration
-      desc : deceleration
-      label: deceleration
-      min  : 0.0
-      max  : 5
-      v    : 0.45
+    - name : acceleration
+      desc : acceleration
+      label: acceleration
+      min  : -5
+      max  : 0
+      v    : -0.325
       cmd_param:
         dash     : ''
         delim    : ':='

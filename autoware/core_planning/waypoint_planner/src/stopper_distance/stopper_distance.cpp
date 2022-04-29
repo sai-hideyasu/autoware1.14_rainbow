@@ -12,6 +12,12 @@
 
 class StopperDistance
 {
+public:
+	const int TRAFFIC_LIGHT_RED = 0;
+	const int TRAFFIC_LIGHT_GREEN = 1;
+	const int TRAFFIC_LIGHT_YELLOW = 10;
+	const int TRAFFIC_LIGHT_YELLOW_RED = 11;
+	const int TRAFFIC_LIGHT_UNKNOWN = 2;
 private:
 	ros::NodeHandle nh_, private_nh_;
 	ros::Subscriber sub_waypoint_, sub_light_color_, sub_camera_light_color_, sub_temporari_flag_;
@@ -84,7 +90,7 @@ private:
 			dis += tf::tfDistance(v1, v2);
 
 			autoware_msgs::WaypointParam waypoint_param = msg.waypoints[i].waypoint_param;
-			if(waypoint_param.signal_stop_line > 0 && light_color_ == 0)
+			if(waypoint_param.signal_stop_line > 0 && (light_color_ == TRAFFIC_LIGHT_RED || light_color_ == TRAFFIC_LIGHT_YELLOW_RED))
 			{
 				pubmsg.distance = dis - front_bumper_to_baselink_ + waypoint_param.stop_line_adjustment;
 				pubmsg.send_process = autoware_msgs::StopperDistance::SIGNAL;

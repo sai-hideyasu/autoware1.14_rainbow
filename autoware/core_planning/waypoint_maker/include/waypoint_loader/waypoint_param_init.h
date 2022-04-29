@@ -41,12 +41,14 @@ namespace waypoint_maker
 		wp->waypoint_param.vgf_measurement_range = (map.find("vgf_measurement_range") != map.end()) ? std::stof(map["vgf_measurement_range"]) : -1;
 		wp->waypoint_param.automatic_door = (char)((map.find("automatic_door") != map.end()) ? std::stoi(map["automatic_door"]) : 0);
 		wp->waypoint_param.object_stop_line = ((map.find("object_stop_line") != map.end()) ? std::stoi(map["object_stop_line"]) : 0);
+		wp->waypoint_param.object_acc_line = ((map.find("object_acc_line") != map.end()) ? std::stoi(map["object_acc_line"]) : 0);
 		wp->waypoint_param.signal_stop_line = ((map.find("signal_stop_line") != map.end()) ? std::stoi(map["signal_stop_line"]) : 0);
 		wp->waypoint_param.signal_stop_vector_correction = ((map.find("signal_stop_vector_correction") != map.end()) ? std::stoi(map["signal_stop_vector_correction"]) : 0);
 		wp->waypoint_param.signal_stop_vector_position_correction = ((map.find("signal_stop_vector_position_correction") != map.end()) ? std::stod(map["signal_stop_vector_position_correction"]) : 0);
 		wp->waypoint_param.oncoming_stop_line = ((map.find("oncoming_stop_line") != map.end()) ? std::stoi(map["oncoming_stop_line"]) : 0);
 		wp->waypoint_param.temporary_stop_line = ((map.find("temporary_stop_line") != map.end()) ? std::stod(map["temporary_stop_line"]) : 0);
 		wp->waypoint_param.temporary_fixed_velocity_kmh = ((map.find("temporary_fixed_velocity") != map.end()) ? std::stod(map["temporary_fixed_velocity"]) : 0);
+		wp->waypoint_param.velocity_limit_kmh = ((map.find("velocity_limit_kmh") != map.end()) ? std::stod(map["velocity_limit_kmh"]) : DBL_MAX);
 		wp->waypoint_param.stop_line_adjustment = ((map.find("stop_line_adjustment") != map.end()) ? std::stod(map["stop_line_adjustment"]) : 0);
 		wp->waypoint_param.period_signal_time_first = ((map.find("period_signal_time_first") != map.end()) ? map["period_signal_time_first"] : "");
 		wp->waypoint_param.period_signal_time_step_green = ((map.find("period_signal_time_step_green") != map.end()) ? std::stod(map["period_signal_time_step_green"]) : 0);
@@ -63,7 +65,7 @@ namespace waypoint_maker
 		wp->waypoint_param.ls_gnss_yaw_correction_deg = ((map.find("ls_gnss_yaw_correction_deg") != map.end()) ? std::stod(map["ls_gnss_yaw_correction_deg"]) : -10000);
 		wp->waypoint_param.localizer_check = ((map.find("localizer_check") != map.end()) ? std::stoi(map["localizer_check"]) : -1);
 		wp->waypoint_param.accel_stroke_offset = ((map.find("accel_stroke_offset") != map.end()) ? std::stoi(map["accel_stroke_offset"]) : -1);
-		wp->waypoint_param.temporary_deceleration = ((map.find("temporary_deceleration") != map.end()) ? std::stod(map["temporary_deceleration"]) : -1);
+		wp->waypoint_param.temporary_acceleration = ((map.find("temporary_acceleration") != map.end()) ? std::stod(map["temporary_acceleration"]) : DBL_MAX);
 		wp->waypoint_param.accel_avoidance_distance_min = ((map.find("accel_avoidance_distance_min") != map.end()) ? std::stod(map["accel_avoidance_distance_min"]) : -1);
 		wp->waypoint_param.stop_stroke_max = ((map.find("stop_stroke_max") != map.end()) ? std::stod(map["stop_stroke_max"]) : -1);
 		wp->waypoint_param.accel_stroke_max = ((map.find("accel_stroke_max") != map.end()) ? std::stod(map["accel_stroke_max"]) : -1);

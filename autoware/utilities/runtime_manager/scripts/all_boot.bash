@@ -304,7 +304,7 @@ rostopic pub __name:=config_temporary_stopper /config/temporary_stopper autoware
   stamp: {secs: 0, nsecs: 0}
   frame_id: ''
 search_distance: 7
-deceleration: 0.325
+acceleration: -0.325
 number_of_zeros_ahead: 0
 number_of_zeros_behind: 0
 stop_speed_threshold: 0.1

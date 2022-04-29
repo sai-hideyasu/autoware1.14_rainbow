@@ -1060,9 +1060,10 @@ private:
 			if(use_error_check_ && (msg->lat_std_dev > setting_.gnss_lat_limit ||
 		        msg->lon_std_dev > setting_.gnss_lon_limit ||
 		        msg->alt_std_dev > setting_.gnss_alt_limit && localizer_select_num_ == LOCALIZER_SELECT_GNSS) &&
+				can_receive_502_.clutch == true &&
 				use_safety_localizer_ == true)
 			{
-				if(can_receive_502_.clutch == true)
+				//if(can_receive_502_.clutch == true)
 				{
 					if(can_receive_501_.drive_auto == autoware_can_msgs::MicroBusCan501::STEER_AUTO)
 						drive_clutch_ = false;
@@ -1076,7 +1077,7 @@ private:
 					//can_send();
 					err_gnss_dev_ = true;
 				}
-				else err_gnss_dev_ = false;
+				//else err_gnss_dev_ = false;
 				std::cout << "Danger! Gnss deviation limit over : " << msg->lat_std_dev << "," << msg->lon_std_dev << "," << msg->alt_std_dev << std::endl;
 				std::stringstream safety_error_message;
 				safety_error_message << "Gnss deviation error : ";// << msg->lat_std << "," << msg->lon_std << "," << msg->alt_std;

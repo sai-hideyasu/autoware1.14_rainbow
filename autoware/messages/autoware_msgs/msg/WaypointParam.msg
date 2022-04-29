@@ -35,9 +35,11 @@ int32 signal_stop_vector_correction #信号停止位置のindex補正値
 float64 signal_stop_vector_position_correction #信号停止位置の位置補正値
 int8 signal_image_area_select #画像から信号器を検出する領域指定
 float64 object_stop_line
+float64 object_acc_line
 float64 temporary_stop_line
 float64 stop_line_adjustment
 float64 temporary_fixed_velocity_kmh
+float64 velocity_limit_kmh #経路の速度制限
 string period_signal_time_first
 float64 period_signal_time_step_green
 float64 period_signal_time_step_yellow
@@ -52,7 +54,7 @@ float64 ls_ndt_yaw_correction_deg
 float64 ls_gnss_yaw_correction_deg
 int32 localizer_check
 int32 accel_stroke_offset
-float64 temporary_deceleration
+float64 temporary_acceleration
 float64 accel_avoidance_distance_min
 float64 stop_stroke_max
 float64 accel_stroke_max
