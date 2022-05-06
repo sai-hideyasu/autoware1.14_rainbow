@@ -570,11 +570,12 @@ private:
 			|| tracking == autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
 		{
 			int prev_tracking = prev_tracking_mode_[prev_tracking_mode_.size()-1];
-			if(prev_tracking != autoware_msgs::CarCruiseStatus::TRACKING_STOP && prev_tracking !=  autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
+			/*if(prev_tracking != autoware_msgs::CarCruiseStatus::TRACKING_STOP && prev_tracking !=  autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
 			{
-				velocity_limit_of_stopmode_kmh_ = current_velocity_ave_mps_ * 3.6 / 2.0;
+				velocity_limit_of_stopmode_kmh_ = //current_velocity_ave_mps_ * 3.6 / 2.0;
 				std::cout << "velocity_limit_of_stopmode_kmh," << velocity_limit_of_stopmode_kmh_ << std::endl;
-			}
+			}*/
+			velocity_limit_of_stopmode_kmh_ = 35;
 			double bunsi = std::pow(current_velocity_ave_mps_, 2) - std::pow(cmdacc.vehicle_ahead_velocity, 2);
 			double bunbo = 2 * stop_line_info.distance_;
 			double dec_acc = bunsi / bunbo;
@@ -599,6 +600,7 @@ private:
 				{
 					std::cout << "tracking stop" << std::endl;
 					curr_waypoint.waypoint_param.object_stop_line = 1;
+					//curr_waypoint.waypoint_param.signal_stop_line = 1;
 					//curr_waypoint.waypoint_param.temporary_deceleration = ;
 					curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = 0;
 					curr_waypoint.waypoint_param.temporary_acceleration = -0.30;//dec_acc;
