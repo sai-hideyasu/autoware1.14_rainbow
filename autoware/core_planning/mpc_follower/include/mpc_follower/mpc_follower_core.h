@@ -45,6 +45,7 @@
 #include <autoware_msgs/ControlCommandStamped.h>
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/VehicleStatus.h>
+#include <autoware_msgs/MpcDebugValues.h>
 
 #include "mpc_follower/mpc_utils.h"
 #include "mpc_follower/mpc_trajectory.h"
@@ -207,6 +208,7 @@ private:
   ros::Publisher pub_debug_filtered_traj_;        //!< @brief publisher for debug info
   ros::Publisher pub_debug_predicted_traj_;       //!< @brief publisher for debug info
   ros::Publisher pub_debug_values_;               //!< @brief publisher for debug info
+  ros::Publisher pub_debug_list_;
   ros::Publisher pub_debug_mpc_calc_time_;        //!< @brief publisher for debug info
 
   ros::Subscriber sub_estimate_twist_;         //!< @brief subscriber for /estimate_twist for debug

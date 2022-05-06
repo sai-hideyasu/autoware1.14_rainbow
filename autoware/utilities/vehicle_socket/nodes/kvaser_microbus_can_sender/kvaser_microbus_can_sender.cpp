@@ -125,6 +125,7 @@ private:
 	int stroke_state_mode_;
 public:
 	const static int STROKE_STATE_MODE_ACCEL_ = 0;
+	const static int STROKE_STATE_MODE_ACCEL_RELEASE = 4;
 	const static int STROKE_STATE_MODE_BRAKE_ = 1;
 	const static int STROKE_STATE_MODE_STOP_ = 2;
 	const static int STROKE_STATE_MODE_KEEP_ = 3;
@@ -2213,7 +2214,7 @@ private:
 		const double minvel = 10;
 		const double maxvel = 20;
 		const double minsrk = 0;
-		double maxsrk = (stopper_distance_.distance != -1 && stopper_distance_.fixed_velocity <= 10) ? 1 : 190;//150;
+		double maxsrk = (stopper_distance_.distance != -1 && stopper_distance_.fixed_velocity <= 10) ? 1 : 150;
 		double stroke_kagen;
 		if(current_velocity > maxvel) stroke_kagen = maxsrk;
 		else if(current_velocity < minvel) stroke_kagen = minsrk;
@@ -2322,9 +2323,23 @@ private:
 			update_current_velocity_ = false;
 		}
 
+		//前方車両の距離に対するPID_P
+		const double front_car_distance_kp = 10.0;
+		double front_car_distnace_stroke_plus = 0; 
+		if((car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
+			&& car_cruise_status_.distance_x_m != -1)
+		{
+			front_car_distnace_stroke_plus = (car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
+			front_car_distnace_stroke_plus = std::min(std::max(front_car_distnace_stroke_plus, -200.0), 200.0);
+		}
+
+		//PID計算
 		double target_accel_stroke = setting_.k_accel_p_velocity * e +
 		       setting_.k_accel_i_velocity * e_i +
 		       setting_.k_accel_d_velocity * e_d_+
+			   front_car_distnace_stroke_plus +
 			   100;
 		pid_params.set_accel_e_prev_velocity(e);
 
@@ -2371,13 +2386,13 @@ private:
 			//const double velocity_magn = 0.9;
 			//double stopper_distance_th = (setting_.stopper_distance1 > cmd_velocity*velocity_magn) ? setting_.stopper_distance1 : cmd_velocity*velocity_magn;
 			double velocity_magn;
-			if(stopD_first_velocity_ > 40) velocity_magn = 1.5;
-			else if(stopD_first_velocity_ > 35) velocity_magn = 1.4;
-			else if(stopD_first_velocity_ > 30) velocity_magn = 1.3;
-			else if(stopD_first_velocity_ > 25) velocity_magn = 1.25;
-			else if(stopD_first_velocity_ > 20) velocity_magn = 1.2;
-			else if(stopD_first_velocity_ > 15) velocity_magn = 1.1;
-			else if(stopD_first_velocity_ > 10) velocity_magn = 1.1;
+			if(brake_stopD_first_velocity_ > 40) velocity_magn = 1.5;
+			else if(brake_stopD_first_velocity_ > 35) velocity_magn = 1.4;
+			else if(brake_stopD_first_velocity_ > 30) velocity_magn = 1.3;
+			else if(brake_stopD_first_velocity_ > 25) velocity_magn = 1.25;
+			else if(brake_stopD_first_velocity_ > 20) velocity_magn = 1.2;
+			else if(brake_stopD_first_velocity_ > 15) velocity_magn = 1.1;
+			else if(brake_stopD_first_velocity_ > 10) velocity_magn = 1.1;
 			else velocity_magn = 1.1;
 			double stopper_distance_th = current_velocity_kmh * velocity_magn;
 
@@ -2405,20 +2420,20 @@ private:
 
 	double e_i_val_;
 	//!< okanuma
-	double stopD_first_velocity_;//停止判定の初期判定時の速度
-	std::vector<double> list_acceleration;	//!< 加速度のリスト(section_cntの個数がサイズ)
-	double past_velocity = 0.0;	//!< 前回速度
-	double past_sec = 0.0;	//!< 前回取得時の時間
+	double brake_stopD_first_velocity_;//停止判定の初期判定時の速度
+	std::vector<double> brake_list_acceleration;	//!< 加速度のリスト(section_cntの個数がサイズ)
+	double brake_past_velocity = 0.0;	//!< 前回速度
+	double brake_past_sec = 0.0;	//!< 前回取得時の時間
 //	const double distance_margin = 1.0;	//!< stopDとの距離の乖離の余裕
-	const double acceleration_margin = 0.1;	//!< 理想加速度との乖離の余裕
+	const double brake_acceleration_margin = 0.1;	//!< 理想加速度との乖離の余裕
 	const double brake_i_min = 0.1;	//!< brake_iの最小値(appで変更できるようにしたほうが良い)
-	const double brake_i_max = 0.47;//0.45;	//!< brake_iの最大値(appで変更できるようにしたほうが良い)
-	const int section_cnt = 5;//10;	//!< 移動平均区間
+	const double brake_i_max = 0.45;//0.47;//0.45;	//!< brake_iの最大値(appで変更できるようにしたほうが良い)
+	const int brake_section_cnt = 5;//10;	//!< 移動平均区間
 	//!< ここまで	okanuma
 	double _brake_stroke_pid_control(double current_velocity_kmh, double cmd_velocity_kmh, double acceleration, std::string &routine_str)
 	{
 		routine_str = "brake";
-		if(stopper_distance_.distance == -1) stopD_first_velocity_ = 0;
+		if(stopper_distance_.distance == -1) brake_stopD_first_velocity_ = 0;
 
 		e_i_val_ = 0;
 		double brake_stroke_step = setting_.brake_stroke_step_max;//2;
@@ -2437,7 +2452,7 @@ private:
 		//減速しすぎを防ぐためにtarget下限を1で踏みとどまらせる処理
 		if(brekeLimitJugde(current_velocity_kmh, cmd_velocity_kmh) == true)
 		{
-			routine_str = "brake1";
+			routine_str = "Brelease";
 			pid_params.clear_diff_velocity();
 			pid_params.clear_diff_acceleration();
 			pid_params.clear_diff_distance();
@@ -2447,13 +2462,27 @@ private:
 			//if(current_velocity > cmd_velocity)
 			if(use_slow_accel_release_ == true)//ゆっくりアクセルを離すか？
 			{
-				if(stopD_first_velocity_ == 0) stopD_first_velocity_ = current_velocity_kmh;
+				if(brake_stopD_first_velocity_ == 0) brake_stopD_first_velocity_ = current_velocity_kmh;
 				double stroke_kagen = math_stroke_kagen_brake(current_velocity_kmh);
 				pub_acceleration_ideal.publish(stroke_kagen);
 				std::cout << "kagen : " << stroke_kagen << std::endl;
 				double stroke = pid_params.get_stroke_prev()-brake_stroke_step;
 				if(stroke < stroke_kagen) stroke = stroke_kagen;
+
 				pid_params.set_stroke_prev(stroke);
+
+				//前方車両の距離に対するPID_P
+				const double front_car_distance_kp = 2.0;
+				if(stroke != 1
+					&& (car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION
+					|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1
+					|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
+					&& car_cruise_status_.distance_x_m != -1)
+				{
+					double val = (car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
+					val = std::min(std::max(val, -50.0), 50.0);
+					stroke += val;
+				}
 				/*std::stringstream str_pub;
 				str_pub << stroke;
 				pub_tmp_.publish(str_pub.str());*/
@@ -2507,24 +2536,24 @@ private:
 		if(stopper_distance_.distance > 0)
 		{
 			routine_str = "brake3";
-			if(past_sec != velocity_stamp)
+			if(brake_past_sec != velocity_stamp)
 			{
 				routine_str = "brake4";
-				if(past_velocity != 0.0)
+				if(brake_past_velocity != 0.0)
 				{
 					routine_str = "brake5";
 					//!< 時間計算
 					//if(gnss_time_.sec < past_sec) list_acceleration.push_back((current_velocity/3.6 - past_velocity) / (60 - past_sec + gnss_time_.sec));
 					//else list_acceleration.push_back((current_velocity/3.6 - past_velocity) / (gnss_time_.sec - past_sec));
-					list_acceleration.push_back(((current_velocity_kmh/3.6 - past_velocity) / (velocity_stamp - past_sec)));
+					brake_list_acceleration.push_back(((current_velocity_kmh/3.6 - brake_past_velocity) / (velocity_stamp - brake_past_sec)));
 					//!< 移動平均リストをsection_cnt分にする
 					
-					while(list_acceleration.size() > section_cnt)
+					while(brake_list_acceleration.size() > brake_section_cnt)
 					{
-						list_acceleration.erase(list_acceleration.begin());
+						brake_list_acceleration.erase(brake_list_acceleration.begin());
 					}
 					//!< section_cnt個数溜まったら計算を行う
-					if(list_acceleration.size() == section_cnt)
+					if(brake_list_acceleration.size() == brake_section_cnt)
 					{
 						routine_str = "brake6";
 						/*std::string acc_str;
@@ -2536,11 +2565,11 @@ private:
 
 						//!< 加速度平均値計算
 						double acceleration_ave = 0.0;
-						for(double i : list_acceleration)
+						for(double i : brake_list_acceleration)
 						{
 							acceleration_ave += i;
 						}
-						acceleration_ave /= (double)list_acceleration.size();
+						acceleration_ave /= (double)brake_list_acceleration.size();
 
 
 						double ideal_acceleration = (pow(stopper_distance_.fixed_velocity, 2)-pow((current_velocity_kmh/3.6), 2)) / (2 * stopper_distance_.distance);	//!< 理想加速度計算
@@ -2574,7 +2603,7 @@ private:
 							if(brake_i > brake_i_max) brake_i = brake_i_max;
 							if(brake_i < brake_i_min) brake_i = brake_i_min;
 						}
-						list_acceleration.clear();
+						brake_list_acceleration.clear();
 
 						//pub_acceleration_main.publish(acceleration_ave);	//!< デバッグ用
 						//pub_acceleration_ideal.publish(ideal_acceleration);	//!< デバッグ用
@@ -2591,31 +2620,72 @@ private:
 				}
 			}
 
-			past_velocity = current_velocity_kmh / 3.6;	//!<速度保管
-			past_sec = velocity_stamp;	//!< 現時刻保存
+			brake_past_velocity = current_velocity_kmh / 3.6;	//!<速度保管
+			brake_past_sec = velocity_stamp;	//!< 現時刻保存
 		}
 		else
 		{
 			routine_str = "brake7";
 			brake_i = 0.4;
-			list_acceleration.clear();
-			past_velocity = 0;	//!<速度保管
-			past_sec = 0;	//!< 現時刻保存
+			brake_list_acceleration.clear();
+			brake_past_velocity = 0;	//!<速度保管
+			brake_past_sec = 0;	//!< 現時刻保存
 		}
 		//!< ここまで okanuma
 
+		std::stringstream str_pub;
+		//前方車両の距離に対するPID_P
+		const double front_car_distance_kp = 0.5;
+		double front_car_distnace_stroke_plus = DBL_MAX; 
+		if((car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
+			&& car_cruise_status_.distance_x_m != -1)
+		{
+			front_car_distnace_stroke_plus = -(car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
+			str_pub << "mobileye," << front_car_distnace_stroke_plus;
+		}
+
+		double distance_stroke_plus = 0;
+		if(stopper_distance_.distance < car_cruise_status_.distance_x_m && stopper_distance_.distance != -1)
+		{
+			str_pub.clear();
+			const double stop_line_kp = 2;
+			double stop_line_distance_stroke_plus = DBL_MAX;
+			if(car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_NO
+				&& stopper_distance_.send_process == autoware_msgs::StopperDistance::TEMPORARY_STOPPER
+				&& stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)
+			{
+				stop_line_distance_stroke_plus = -(stopper_distance_.distance_rss - stopper_distance_.distance) * stop_line_kp;
+				str_pub << "stopD,stop_line_distance_stroke_plus";
+			}
+			if(stop_line_distance_stroke_plus != DBL_MAX) distance_stroke_plus = stop_line_distance_stroke_plus;
+		}
+		else
+		{
+			if(front_car_distnace_stroke_plus != DBL_MAX) distance_stroke_plus = front_car_distnace_stroke_plus;
+		}
+		pub_tmp_.publish(str_pub.str());
+
+		//PID計算
 		double target_brake_stroke = setting_.k_brake_p_velocity * e +
 		        brake_i * e_i +
-		        setting_.k_brake_d_velocity * e_d;
+		        setting_.k_brake_d_velocity * e_d +
+				distance_stroke_plus;
 		pid_params.set_brake_e_prev_velocity(e);
 		e_i_val_ = e_i;
 
-		std::stringstream str_pub;
+		/*std::stringstream str_pub;
 		str_pub << cmd_velocity_kmh - current_velocity_kmh << "," << setting_.k_brake_p_velocity << "*" << e << "=" << setting_.k_brake_p_velocity*e << "," << brake_i << "*" << e_i << "=" << brake_i*e_i << "," << setting_.k_brake_d_velocity << "*" << e_d_ << "=" << setting_.k_accel_d_velocity*e_d_ << "," << target_brake_stroke;
-		pub_tmp_.publish(str_pub.str());
+		pub_tmp_.publish(str_pub.str());*/
 
-		double stop_max = 320;
-		if(use_stopper_distance_ == true &&
+		/*if(use_stopper_distance_ == true && stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE &&
+			car_cruise_status_.expected_collision_time < 10.0)//前方車両追跡時かつ衝突時間が１０秒以内の場合、強めに踏む
+		{
+			routine_str = "brakeO";
+			target_brake_stroke = 250;
+		}
+		else*/ if(use_stopper_distance_ == true &&
 			((stopper_distance_.send_process == autoware_msgs::StopperDistance::TEMPORARY_STOPPER && stopper_distance_.fixed_velocity <= 0) ||
 		      stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL ||
 			  stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE))
@@ -2745,6 +2815,7 @@ private:
 		//if(ret > -setting_.pedal_stroke_min) ret = -setting_.pedal_stroke_min;
 		send_step_ = brake_stroke_step;
 		pid_params.set_stop_stroke_prev(ret);
+		double stop_max = 320;
 		if(ret > stop_max) ret = stop_max;
 		return -ret;
 	}
@@ -2767,6 +2838,18 @@ private:
 			return setting_.brake_stroke_stopping_med;
 		}
 	}*/
+
+	double accel_release()
+	{
+		routine_.data = "Arelease";
+		pid_params.set_accel_e_prev_velocity(0);
+		pid_params.set_accel_e_prev_acceleration(0);
+		pid_params.set_brake_e_prev_velocity(0);
+		pid_params.set_brake_e_prev_acceleration(0);
+		pid_params.set_stroke_prev(0);
+		pid_params.set_stop_stroke_prev(0);
+		return 1;
+	}
 
 	double _keep_control()
 	{
@@ -2884,17 +2967,8 @@ pub_tmp_.publish(str_ret);*/
 
 			std::cout << "velocity hikaku : " << cmd_velocity << "," << current_velocity << std::endl;
 			std::cout << "flag : " << (int)checkMobileyeObstacleStop(nowtime) << "," << stopper_distance_.distance << "," << in_accel_mode_ << "," << std::endl;
-			if (checkMobileyeObstacleStop(nowtime) == false
-					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
-			        && current_velocity < setting_.velocity_limit
-			        && (stopper_distance_.distance<0 || stopper_distance_.distance>accel_mode_avoidance_distance)
-					&& in_accel_mode_ == true)
-			{
-				std::cout << " stroke drive" << std::endl;
-				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
-			}
 			//減速判定
-			else if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
+			if(fabs(cmd_velocity) < current_velocity - setting_.acceptable_velocity_variation
 			         && fabs(cmd_velocity) > 0.0 || (stopper_distance_.distance>=0 && stopper_distance_.distance <=current_velocity)
 					 && in_brake_mode_ == true)
 			{
@@ -2906,6 +2980,20 @@ pub_tmp_.publish(str_ret);*/
 			{
 				std::cout << "stroke distance" << std::endl;
 				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_BRAKE_);
+			}
+			else if(stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE && car_cruise_status_.accel_release == true)
+			{
+				std::cout << "stroke distance" << std::endl;
+				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_RELEASE);
+			}
+			else if (checkMobileyeObstacleStop(nowtime) == false
+					&& fabs(cmd_velocity) > current_velocity + setting_.acceptable_velocity_variation
+			        && current_velocity < setting_.velocity_limit
+			        && (stopper_distance_.distance<0 || stopper_distance_.distance>accel_mode_avoidance_distance)
+					&& in_accel_mode_ == true)
+			{
+				std::cout << " stroke drive" << std::endl;
+				pid_params.set_stroke_state_mode_(PID_params::STROKE_STATE_MODE_ACCEL_);
 			}
 			//停止判定
 			/*else if(cmd_velocity == 0.0 && current_velocity > 0.0)//VELOCITY_ZERO_VALUE_/100.0)
@@ -2957,6 +3045,9 @@ pub_tmp_.publish(str_ret);*/
 			case PID_params::STROKE_STATE_MODE_ACCEL_:
 				new_stroke = _accel_stroke_pid_control(current_velocity, cmd_velocity, routine_.data);//, &stroke_speed);
 				pub_stroke_routine_.publish(routine_);
+				break;
+			case PID_params::STROKE_STATE_MODE_ACCEL_RELEASE:
+				new_stroke = accel_release();
 				break;
 			case PID_params::STROKE_STATE_MODE_BRAKE_:
 				std_msgs::Float64 brake_i;
@@ -3198,7 +3289,7 @@ public:
 		, mpc_steer_gradually_change_distance_(0)
 		, last_steer_override_value_(0)
 		, local_way_max_vel_mps_(0)
-		, stopD_first_velocity_(0)
+		, brake_stopD_first_velocity_(0)
 		, use_error_check_(true)
 		, auto_log_write_(true)
 		, fail_safe_flag_("NONE")

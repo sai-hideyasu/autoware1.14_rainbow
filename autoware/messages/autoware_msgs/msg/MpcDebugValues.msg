@@ -1,0 +1,17 @@
+float64 final_steering_command
+float64 mpc_calculation_result
+float64 feedforward_steering_value
+float64 feedforward_steering_value_raw
+float64 current_steering_angle
+float64 lateral_error
+float64 current_pose_yaw
+float64 nearest_pose_yaw
+float64 yaw_error
+float64 command_velocitys
+float64 measured_velocity
+float64 angvel_from_steer_comand
+float64 angvel_from_measured_steer
+float64 angvel_from_path_curvature
+float64 nearest_path_curvature
+float64 current_velocity
+float64 estimate_twist_angular_velocity

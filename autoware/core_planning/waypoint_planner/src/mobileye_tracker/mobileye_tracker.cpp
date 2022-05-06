@@ -171,12 +171,13 @@ private:
 	//const static double control_cycle_ = 10.0; //!<制御周期
 	//const static double delay_time_ = 1.0 / control_cycle_ * 2.0; //!< 1/制御周期 * 2
 
-	const static int TRACKING_NO = 0;
+	const static size_t PREV_TRAKING_SIZE = 10;
+	/*const static int TRACKING_NO = 0;
 	const static int TRACKING_DECELERATION1 = 1;
 	const static int TRACKING_DECELERATION2 = 2;
 	const static int TRACKING_EMG_DECELERATION = 3;
 	const static int TRACKING_STOP = 4;
-	const static int TRACKING_ACCELERATION = 5;
+	const static int TRACKING_ACCELERATION = 5;*/
 
 	ros::NodeHandle nh_;
 	ros::NodeHandle pnh_;
@@ -205,13 +206,16 @@ private:
 	MobileyeObstacleInfo foreground_mobileye_; //!< 探索範囲内で見つかったmobileye正面オブジェクト
 	//geometry_msgs::TwistStamped current_velocity_; //!< 現在の自車両速度
 	std::vector<geometry_msgs::TwistStamped> current_velocity_list_; //!< current_velocityのリスト
-	double current_velocity_ave_; //!< 現在の自車両速度
-	double current_acc_ave_; //!<現在の加速度
+	double current_velocity_ave_mps_; //!< 現在の自車両速度
+	double current_acc_ave_mps_; //!<現在の加速度
 	ros::Time velocity0_timer_; //!<障害物速度が最初に0と判断された時間
 	double front_bumper_to_baselink_; //!< baselinkからフロントバンパーまでの距離
+	double mobileye_virtual_bumper_; //!<mobileyeに設定してある仮想バンパーの距離 バスなどのボンネットがない車用
 	double vehicle_width_;//!< 車両の幅
 	geometry_msgs::PoseStamped current_pose_;
 	double target_deceleration_;//!<目標減速度
+	std::vector<int> prev_tracking_mode_;//!<過去のトラッキングモードのリスト
+	double velocity_limit_of_stopmode_kmh_;//!<TRAKING_STOP初回時に決める経路速度限界
 
 	double mathVelAve()
 	{
@@ -228,21 +232,21 @@ private:
 
 		double relative_vel = obs_list.getObsRelativeVelMpsAve();//obs.orig_data.obstacle_rel_vel_x;//前方車両と自車両との相対速度
 		double relative_acc = obs_list.getObsRelativeAccAve();//obs.orig_data.object_accel_x;//前方車両と自車両との相対加速度
-		double current_vel = current_velocity_ave_;//current_velocity_.twist.linear.x;
-		double current_acc = current_acc_ave_;//mathAcc(current_velocity_list_);//自車両の加速度
+		double current_vel = current_velocity_ave_mps_;//current_velocity_.twist.linear.x;
+		double current_acc = current_acc_ave_mps_;//mathAcc(current_velocity_list_);//自車両の加速度
 		
 		double vehicle_ahead_vel = obs_list.getVelocityMpsAve();//relative_vel + current_vel;//前方車両の速度
 		double vehicle_ahead_acc = obs_list.getAccAve();//relative_acc + current_acc;//前方車両の加速度
 		double vehicle_ahead_acc2 = 0;//mathAcc(foreground_mobileye_);
 		//double Lt = targetFreeSpace(current_velocity_.twist.linear.x, target_deceleration_, delay_time_, min_free_running_distance_);
 		double delay_time = 1.0;//1.0 / config_.control_cycle * 2.0;
-		double Lt = targetFreeSpace(current_velocity_ave_, target_deceleration_, delay_time, config_.min_free_running_distance);
+		double Lt = targetFreeSpace(current_velocity_ave_mps_, target_deceleration_, delay_time, config_.min_free_running_distance);
 //		double Lt_prime = targetFreeSpace(vehicle_ahead_vel, target_deceleration_, delay_time, config_.min_free_running_distance);
 		double Lt_prime = targetFreeSpace(vehicle_ahead_vel, 0.3, delay_time*0.6, config_.min_free_running_distance);
 		double L0_Lt = targetFreeSpace(vehicle_ahead_vel, MAX_DECELERATION, delay_time, config_.min_free_running_distance);
 		double cur_space, front_space;
-		//double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_, vehicle_ahead_vel, 0.13, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
-		double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_, vehicle_ahead_vel, 0.14, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
+		//double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_mps_, vehicle_ahead_vel, 0.13, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
+		double Lt_RSS = targetFreeSpaceRSS(current_velocity_ave_mps_, vehicle_ahead_vel, 0.14, 0.3, delay_time, delay_time*0.6, 3.0, cur_space, front_space);
 		double L0 = obs_list.getRelativePoseXAve();//経路から計算した距離にすべき？//obs.orig_data.obstacle_pos_x;//前方車両までの距離
 		double cmd_acc = vehicle_ahead_acc + (1.0 / 2.0) * std::pow(relative_vel, 2.0) / (Lt_RSS - L0);//(Lt - L0);
 		double Lt_part1 = (vehicle_ahead_vel-current_vel)*(-(vehicle_ahead_vel-current_vel)/(vehicle_ahead_acc-cmd_acc));
@@ -250,9 +254,19 @@ private:
 		double Lt2 = L0 + Lt_part1 + Lt_part2;
 		double target_scheduled_achievement_time = 2.0 * (Lt - L0) / (relative_vel);
 		double expected_collision_time;// = (relative_vel == 0) ? 10000.0 : L0 / (-relative_vel);
-		if(relative_vel >= 0) expected_collision_time = DBL_MAX;//前方車両が近づかない場合は衝突予想時間を最大値にする
-		else expected_collision_time = L0 / (-relative_vel);
-
+		double reach_time;
+		if(relative_vel >= 0)
+		{
+			expected_collision_time = DBL_MAX;//前方車両が近づかない場合は衝突予想時間を最大値にする
+			reach_time = DBL_MAX;
+		}
+		else
+		{
+			//expected_collision_time = L0 / (-relative_vel);
+			double sqrt_val = relative_vel * relative_vel + 2 * current_acc * L0;
+			if(std::abs(current_acc) <= 1.0E-4 || sqrt_val < 0) expected_collision_time = L0 / (-relative_vel);
+			else expected_collision_time = (relative_vel + std::sqrt(sqrt_val)) / current_acc;
+		}
 		//double cmd_acc = vehicle_ahead_acc + std::pow(relative_vel, 2.0) / (2*(Lt - L0));
 		//double target_scheduled_achievement_time = - (relative_vel) / (vehicle_ahead_acc - cmd_acc);
 
@@ -269,7 +283,7 @@ private:
 		cmdacc.obstacle_pos_x_diff = obs_list.getRelativePoseXDiffAve();
 		cmdacc.cur_space = cur_space;
 		cmdacc.front_space = front_space;
-		cmdacc.current_velocity = current_velocity_ave_;//current_vel;
+		cmdacc.current_velocity = current_velocity_ave_mps_;//current_vel;
 		cmdacc.relative_vel = relative_vel;
 		cmdacc.vehicle_ahead_velocity = vehicle_ahead_vel;//relative_vel + current_vel;
 		cmdacc.current_acc = current_acc;
@@ -286,7 +300,7 @@ private:
 		//const double front_velocity_ave_mps,
 		const double way_vel)
 	{
-		int ret = TRACKING_NO;
+		int ret = autoware_msgs::CarCruiseStatus::TRACKING_NO;
 
 		/*if(config_.min_free_running_distance >= cmd.L0) //現在車間距離が最低車間距離以下なら停止
 		{
@@ -324,11 +338,11 @@ private:
 			if(velocity0_timer_ == ros::Time(0)) velocity0_timer_ = nowtime;
 			ros::Duration ros_time_diff = nowtime - velocity0_timer_;
 			double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
-			if(time_diff >= 0.1) ret = TRACKING_STOP;
+			if(time_diff >= 0.1) ret = autoware_msgs::CarCruiseStatus::TRACKING_STOP;
 		}
 		else if(cmd.L0 > cmd.Lt_RSS * LT_RSS_TH_MAGN)//責任車間距離を基準とした一定距離よりも離れている場合は追跡処理をしない
 		{
-			ret = TRACKING_NO;
+			ret = autoware_msgs::CarCruiseStatus::TRACKING_NO;
 		}
 		else
 		{
@@ -338,26 +352,32 @@ private:
 			//if(cmd.Lt > cmd.L0 && cmd.relative_vel < 0)
 			if(cmd.Lt_RSS > cmd.L0 && cmd.relative_vel < 0)
 			{
-				ret = TRACKING_DECELERATION1;//減速
+				ret = autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1;//減速
 			}
 			//else if(cmd.Lt < cmd.L0 && cmd.relative_vel < 0)
 			else if(cmd.Lt_RSS < cmd.L0 && cmd.relative_vel < 0)
 			{
-				ret = TRACKING_DECELERATION2;//減速
+				ret = autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2;//減速
 			}
 			//else if(cmd.L0 < cmd.Lt_prime && cmd.relative_vel < 0)
 			//else if((cmd.L0 < cmd.L0_Lt || cmd.expected_collision_time < 3.0) && cmd.relative_vel < 0)
 			else if(cmd.expected_collision_time < 5.0)
 			{
-				ret = TRACKING_EMG_DECELERATION;//緊急減速
+				ret = autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION;//緊急減速
 			}
 			else if(cmd.relative_vel > 0 && cmd.vehicle_ahead_velocity < way_vel)
 			{
-				ret = TRACKING_ACCELERATION;//前方車両の速度に合わせる
+				ret = autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION;//前方車両の速度に合わせる
 			}
 		}
 
 		return ret;
+	}
+
+	void prevTrakingAdd(int tracking_mode)
+	{
+		prev_tracking_mode_.push_back(tracking_mode);
+		if(prev_tracking_mode_.size() > PREV_TRAKING_SIZE) prev_tracking_mode_.erase(prev_tracking_mode_.begin());
 	}
 
 	//前方車両速度から追跡経路の速度を作成
@@ -375,24 +395,20 @@ private:
 			status.header.stamp = ros::Time::now();
 			status.relative_velocity_mps = DBL_MIN;
 			status.distance_x_m = -1;
+			status.distance_rss_m = -1;
+			status.tracking_mode = autoware_msgs::CarCruiseStatus::TRACKING_NO;
+			status.accel_release = false;
 			pub_car_cruise_status_.publish(status);
 
 			track_pattern_str.data = "NO";
+			prevTrakingAdd(autoware_msgs::CarCruiseStatus::TRACKING_NO);
 			pub_track_pattern_.publish(track_pattern_str);
-
 			return;
 		}
 
 		//最近傍の前方車両から車両追従に関するパラメータを計算する
 		const autoware_msgs::TransformMobileyeObstacle foreground_obs = foreground_mobileye_.getLatestObs();//foreground_obstract_list_.getObs(foreground_obstract_list_.getSize()-1);
 		const autoware_msgs::MobileyeCmdParam cmdacc = mathTargetAcc(foreground_mobileye_);
-
-		autoware_msgs::CarCruiseStatus status;
-		status.header.stamp = ros::Time::now();
-		status.relative_velocity_mps = foreground_mobileye_.getObsRelativeVelMpsAve();
-		status.distance_x_m = cmdacc.L0;
-		status.expected_collision_time = cmdacc.expected_collision_time;
-		pub_car_cruise_status_.publish(status);
 
 		autoware_msgs::Lane new_lane = *lane;
 		autoware_msgs::Waypoint &first_waypoint = new_lane.waypoints[0];
@@ -417,7 +433,22 @@ private:
 				linea_x = new_lane.waypoints[waycou].twist.twist.linear.x;
 		}
 
+		int prev_tracking = prev_tracking_mode_[prev_tracking_mode_.size()-1];
 		int tracking = trackJudge(cmdacc, foreground_mobileye_, linea_x);//追跡タイプを計算
+
+		autoware_msgs::CarCruiseStatus status;
+		status.header.stamp = ros::Time::now();
+		status.relative_velocity_mps = foreground_mobileye_.getObsRelativeVelMpsAve();
+		status.distance_x_m = cmdacc.L0;
+		status.distance_rss_m = cmdacc.Lt_RSS;
+		status.expected_collision_time = cmdacc.expected_collision_time;
+		status.tracking_mode = tracking;
+		if(status.expected_collision_time >= 10.0 && status.expected_collision_time <= 20)
+			status.accel_release = true; 
+		else
+			status.accel_release = false;
+		pub_car_cruise_status_.publish(status);
+
 		double waypoints_velocity_mps;
 		int obs_index = -1;//前方車両が存在するwaypoint index
 		std::cout << "stop_line_info.waypoint_index_," << stop_line_info.waypoint_index_ << std::endl; 
@@ -427,32 +458,32 @@ private:
 
 			if(waycou==stop_line_info.waypoint_index_)
 			{
-				if(tracking == TRACKING_STOP)
+				if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_STOP)
 				{
 					waypoints_velocity_mps = 0;
 					obs_index = waycou;
 				}
-				else if(tracking == TRACKING_DECELERATION1)
+				else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1)
 				{
 					waypoints_velocity_mps = foreground_obs.velocity_mps;
 					obs_index = waycou;
 				}
-				else if(tracking == TRACKING_DECELERATION2)
+				else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
 				{
 					waypoints_velocity_mps = foreground_obs.velocity_mps;
 					obs_index = waycou;
 				}
-				else if(tracking == TRACKING_EMG_DECELERATION)
+				else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
 				{
 					waypoints_velocity_mps = 0;
 
-					double v = current_velocity_ave_;
+					double v = current_velocity_ave_mps_;
 					double a = 0.45;
 					double L = v*v/(2*a);
 
 					if(cmdacc.L0 > L)
 					{
-						tracking == TRACKING_NO;
+						tracking == autoware_msgs::CarCruiseStatus::TRACKING_NO;
 						break;
 					}
 
@@ -471,7 +502,7 @@ private:
 						}
 					}
 				}
-				else if(tracking == TRACKING_ACCELERATION)
+				else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION)
 				{
 					waypoints_velocity_mps = foreground_mobileye_.getVelocityMpsAve();
 					obs_index = waycou;
@@ -483,19 +514,19 @@ private:
 		//確認用
 		switch(tracking)
 		{
-		case TRACKING_DECELERATION1:
+		case autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1:
 			track_pattern_str.data = "DECELERATION1";
 			break;
-		case TRACKING_DECELERATION2:
+		case autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2:
 			track_pattern_str.data = "DECELERATION2";
 			break;
-		case TRACKING_STOP:
+		case autoware_msgs::CarCruiseStatus::TRACKING_STOP:
 			track_pattern_str.data = "STOP";
 			break;
-		case TRACKING_EMG_DECELERATION:
+		case autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION:
 			track_pattern_str.data = "EMG_DECELERATION";
 			break;
-		case TRACKING_ACCELERATION:
+		case autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION:
 			track_pattern_str.data = "ACCELERATION";
 			break;
 		default:
@@ -513,7 +544,7 @@ private:
 		std::string distance_th_str = (cmdacc.L0 > cmdacc.Lt_RSS) ? "Lt_RSS" : "L1";
 
 		//経路に停止線情報を設定
-		if(tracking == TRACKING_DECELERATION2)
+		if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
 		{
 			double distance = 0;
 			int waycou1;
@@ -523,7 +554,7 @@ private:
 				geometry_msgs::Point po1 = new_lane.waypoints[waycou1].pose.pose.position;
 				geometry_msgs::Point po2 = new_lane.waypoints[waycou1+1].pose.pose.position;
 				distance += euclideanDistance(po1, po2);
-				curr_waypoint.twist.twist.linear.x = foreground_mobileye_.getVelocityMpsAve();
+				//curr_waypoint.twist.twist.linear.x = foreground_mobileye_.getVelocityMpsAve();
 				//if(distance > cmdacc.Lt_prime)
 				if(distance > cmdacc.Lt_RSS)
 				{
@@ -535,13 +566,20 @@ private:
 				}
 			}
 		}
-		else if(tracking == TRACKING_STOP || tracking == TRACKING_EMG_DECELERATION)
+		else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_STOP
+			|| tracking == autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
 		{
-			double bunsi = std::pow(current_velocity_ave_, 2) - std::pow(cmdacc.vehicle_ahead_velocity, 2);
+			int prev_tracking = prev_tracking_mode_[prev_tracking_mode_.size()-1];
+			if(prev_tracking != autoware_msgs::CarCruiseStatus::TRACKING_STOP && prev_tracking !=  autoware_msgs::CarCruiseStatus::TRACKING_EMG_DECELERATION)
+			{
+				velocity_limit_of_stopmode_kmh_ = current_velocity_ave_mps_ * 3.6 / 2.0;
+				std::cout << "velocity_limit_of_stopmode_kmh," << velocity_limit_of_stopmode_kmh_ << std::endl;
+			}
+			double bunsi = std::pow(current_velocity_ave_mps_, 2) - std::pow(cmdacc.vehicle_ahead_velocity, 2);
 			double bunbo = 2 * stop_line_info.distance_;
 			double dec_acc = bunsi / bunbo;
 			std::cout << "v2," << cmdacc.vehicle_ahead_velocity << std::endl;
-			std::cout << "v02," << current_velocity_ave_ << std::endl;
+			std::cout << "v02," << current_velocity_ave_mps_ << std::endl;
 			std::cout << "dis," << stop_line_info.distance_ << std::endl;
 			std::cout << "dec_acc," << dec_acc << std::endl;
 			//if(dec_acc < 0) dec_acc = 0;
@@ -564,13 +602,13 @@ private:
 					//curr_waypoint.waypoint_param.temporary_deceleration = ;
 					curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = 0;
 					curr_waypoint.waypoint_param.temporary_acceleration = -0.30;//dec_acc;
-					curr_waypoint.waypoint_param.velocity_limit_kmh = 35;
+					curr_waypoint.waypoint_param.velocity_limit_kmh = velocity_limit_of_stopmode_kmh_;//35;
 					break;
 				}
 				else
 				{
 					//std::cout << "vel_ave," << waypoints_velocity_mps*3.6 << std::endl;
-					curr_waypoint.twist.twist.linear.x = waypoints_velocity_mps;
+					//curr_waypoint.twist.twist.linear.x = waypoints_velocity_mps;
 				}
 			}
 
@@ -582,9 +620,10 @@ private:
 				//curr_waypoint.waypoint_param.temporary_deceleration = ;
 				curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = 0;
 				curr_waypoint.waypoint_param.temporary_acceleration = -0.30;//dec_acc;
+				curr_waypoint.waypoint_param.velocity_limit_kmh = velocity_limit_of_stopmode_kmh_;//35;
 			}
 		}
-		else if(tracking == TRACKING_DECELERATION1)
+		else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1)
 		{
 			//現在車間距離が理想車間距離よりも短い場合は、理想車間距離の半分の距離が理想車間距離となる速度を求める
 			double delay_time = 1.0;
@@ -632,11 +671,11 @@ private:
 					}
 					break;
 				}
-				else
+				/*else
 				{
 					//std::cout << "vel_ave," << waypoints_velocity_mps*3.6 << std::endl;
 					curr_waypoint.twist.twist.linear.x = waypoints_velocity_mps;
-				}
+				}*/
 			}
 
 			//停止線を引く距離が自車両と前方車両までの距離を超えていた場合は、local waypoints 0番に停止線を置く
@@ -646,20 +685,26 @@ private:
 				curr_waypoint.waypoint_param.object_stop_line = 1;
 				//curr_waypoint.waypoint_param.temporary_deceleration = ;
 				curr_waypoint.waypoint_param.temporary_fixed_velocity_kmh = cmd_pass_vel * 3.6;
+				curr_waypoint.waypoint_param.velocity_limit_kmh = 100;
 			}
 		}
-		else if(tracking == TRACKING_ACCELERATION)
+		else if(tracking == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION)
 		{
 			double distance = 0;
 			int waycou;
-			for(waycou=obs_index-1; waycou>=0; waycou--)
+			double Ldistnace =  cmdacc.L0 - cmdacc.Lt_RSS;//責任車間距離までの距離
+			double kp = 1;//距離に関するPID_P;
+			double vel_plus = Ldistnace * kp;
+			//for(waycou=obs_index-1; waycou>=0; waycou--)
+			for(waycou=0; waycou<new_lane.waypoints.size(); waycou++)
 			{
 				autoware_msgs::Waypoint &curr_waypoint = new_lane.waypoints[waycou];
 				std::cout << "vel_ave," << waypoints_velocity_mps*3.6 << std::endl;
-				curr_waypoint.twist.twist.linear.x = waypoints_velocity_mps;
+				curr_waypoint.twist.twist.linear.x = std::max(waypoints_velocity_mps + vel_plus, 0.0);
 			}
 		}
 
+		prevTrakingAdd(tracking);
 		pub_waypoints_.publish(new_lane);
 	}
 
@@ -727,13 +772,13 @@ private:
 			ros::Duration ros_time_diff =
 				current_velocity_list_[current_velocity_list_.size()-1].header.stamp - current_velocity_list_[current_velocity_list_.size()-2].header.stamp;
 			double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
-			current_acc_ave_ = (vel - current_velocity_ave_) / time_diff;
+			current_acc_ave_mps_ = (vel - current_velocity_ave_mps_) / time_diff;
 		}
 		else
 		{
-			current_acc_ave_ = 0;
+			current_acc_ave_mps_ = 0;
 		}
-		current_velocity_ave_ = vel;
+		current_velocity_ave_mps_ = vel;
 		//current_velocity_ = *msg;
 	}
 
@@ -791,8 +836,26 @@ private:
 		int hit_waypoint_index = -1; //判定waypoint
 		double x_adj = 0; //判定waypointのx微調整位置
 
+		int wc;
+		double front_dis_sum = 0;
+		double front_fraction = 0;//wcのwaypoint位置から見た車両フロントの距離
+		for(wc=1; wc<lane->waypoints.size(); wc++)
+		{
+			const autoware_msgs::Waypoint waypoint = lane->waypoints[wc];
+			const autoware_msgs::Waypoint prev_waypoint = lane->waypoints[wc-1];
+			const geometry_msgs::Point way_po = waypoint.pose.pose.position;
+			const geometry_msgs::Point prev_way_po = prev_waypoint.pose.pose.position;
+
+			front_dis_sum += euclideanDistance(way_po, prev_way_po);
+			if(front_dis_sum > front_bumper_to_baselink_ + mobileye_virtual_bumper_)
+			{
+				front_fraction = front_dis_sum - front_bumper_to_baselink_ - mobileye_virtual_bumper_;
+				break;
+			}
+		}
+
 		//経路上の正面車両を探索
-		for(int waycou=1; waycou<lane->waypoints.size(); waycou++)
+		for(int waycou=wc; waycou<lane->waypoints.size(); waycou++)
 		{
 			const autoware_msgs::Waypoint waypoint = lane->waypoints[waycou];
 			const autoware_msgs::Waypoint prev_waypoint = lane->waypoints[waycou-1];
@@ -870,7 +933,7 @@ private:
 			StopLineInfo info;
 			info.waypoint_index_ = stop_index;
 			info.x_adj_ = dis_adj;
-			info.distance_ = dis_sum;
+			info.distance_ = dis_sum - front_bumper_to_baselink_ - mobileye_virtual_bumper_;
 			pub_front_mobileye_obstacle_.publish(foreground_mobileye_.getLatestObs());
 
 			visualization_msgs::Marker marker;
@@ -978,12 +1041,14 @@ public:
 	CarTrackinig(const ros::NodeHandle nh, const ros::NodeHandle pnh)
 		: nh_(nh)
 		, pnh_(pnh)
-		, current_velocity_ave_(0)
-		, current_acc_ave_(0)
+		, current_velocity_ave_mps_(0)
+		, current_acc_ave_mps_(0)
 		, velocity0_timer_(ros::Time(0))
 		, target_deceleration_(0.1)
+		, velocity_limit_of_stopmode_kmh_(0)
 	{
 		front_bumper_to_baselink_ = nh_.param<double>("/vehicle_info/front_bumper_to_baselink", 4.55);
+		mobileye_virtual_bumper_ = nh_.param<double>("/mobileye/virtual_bumper", 2.0);
 		vehicle_width_ = nh_.param<double>("/vehicle_info/vehicle_width", 2.3);
 
 		sub_config_ = nh_.subscribe("/config/mobileye_tracker", 10, &CarTrackinig::callbackConfig, this);

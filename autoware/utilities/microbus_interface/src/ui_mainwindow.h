@@ -379,6 +379,7 @@ public:
     QLineEdit *li_front_car_distance;
     QLabel *lb_front_car_distance_2;
     QLineEdit *li_front_car_responsibility_distance;
+    QPushButton *bt_yure;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -2870,14 +2871,14 @@ public:
         lb_max_speed->setAlignment(Qt::AlignCenter);
         bt_track_excess_acc = new QPushButton(centralWidget);
         bt_track_excess_acc->setObjectName(QStringLiteral("bt_track_excess_acc"));
-        bt_track_excess_acc->setGeometry(QRect(370, 800, 121, 41));
+        bt_track_excess_acc->setGeometry(QRect(360, 800, 121, 41));
         bt_track_excess_acc->setFont(font12);
         bt_track_excess_acc->setCheckable(false);
         bt_track_excess_acc->setAutoRepeat(false);
         bt_track_excess_acc->setAutoExclusive(false);
         bt_track_excess_stop = new QPushButton(centralWidget);
         bt_track_excess_stop->setObjectName(QStringLiteral("bt_track_excess_stop"));
-        bt_track_excess_stop->setGeometry(QRect(500, 800, 121, 41));
+        bt_track_excess_stop->setGeometry(QRect(480, 800, 121, 41));
         bt_track_excess_stop->setFont(font12);
         bt_track_excess_stop->setCheckable(false);
         bt_track_excess_stop->setAutoRepeat(false);
@@ -2926,6 +2927,13 @@ public:
         li_front_car_responsibility_distance->setGeometry(QRect(480, 870, 141, 41));
         li_front_car_responsibility_distance->setFont(font12);
         li_front_car_responsibility_distance->setAlignment(Qt::AlignCenter);
+        bt_yure = new QPushButton(centralWidget);
+        bt_yure->setObjectName(QStringLiteral("bt_yure"));
+        bt_yure->setGeometry(QRect(600, 800, 101, 41));
+        bt_yure->setFont(font12);
+        bt_yure->setCheckable(false);
+        bt_yure->setAutoRepeat(false);
+        bt_yure->setAutoExclusive(false);
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -3303,6 +3311,7 @@ public:
         lb_tracking_type->setText(QApplication::translate("MainWindow", "\350\277\275\345\276\223\346\226\271\346\263\225", Q_NULLPTR));
         lb_front_car_distance->setText(QApplication::translate("MainWindow", "\350\273\212\351\226\223\350\267\235\351\233\242", Q_NULLPTR));
         lb_front_car_distance_2->setText(QApplication::translate("MainWindow", "\350\262\254\344\273\273\350\273\212\351\226\223\350\267\235\351\233\242", Q_NULLPTR));
+        bt_yure->setText(QApplication::translate("MainWindow", "\343\202\206\343\202\214", Q_NULLPTR));
     } // retranslateUi
 
 };

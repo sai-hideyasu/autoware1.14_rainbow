@@ -10268,7 +10268,7 @@ mileage</string>
    <widget class="QPushButton" name="bt_track_excess_acc">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>360</x>
       <y>800</y>
       <width>121</width>
       <height>41</height>
@@ -10295,7 +10295,7 @@ mileage</string>
    <widget class="QPushButton" name="bt_track_excess_stop">
     <property name="geometry">
      <rect>
-      <x>500</x>
+      <x>480</x>
       <y>800</y>
       <width>121</width>
       <height>41</height>
@@ -10485,6 +10485,33 @@ mileage</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="bt_yure">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>800</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>25</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>ゆれ</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+    <property name="autoRepeat">
+     <bool>false</bool>
+    </property>
+    <property name="autoExclusive">
+     <bool>false</bool>
     </property>
    </widget>
   </widget>

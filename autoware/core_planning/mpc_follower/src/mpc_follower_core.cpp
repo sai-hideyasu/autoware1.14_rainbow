@@ -16,7 +16,8 @@
 
 #include "mpc_follower/mpc_follower_core.h"
 
-#define DEBUG_INFO(...) { if (show_debug_info_) { ROS_INFO(__VA_ARGS__); }}
+//#define DEBUG_INFO(...) { if (show_debug_info_) { ROS_INFO(__VA_ARGS__); }}
+#define DEBUG_INFO(...) {printf(__VA_ARGS__); printf("\n");}
 
 MPCFollower::MPCFollower()
     : nh_(""), pnh_("~"), my_position_ok_(false), my_velocity_ok_(false), my_steering_ok_(false)
@@ -148,6 +149,7 @@ MPCFollower::MPCFollower()
   pub_debug_mpc_calc_time_ = pnh_.advertise<std_msgs::Float32>("debug/mpc_calc_time", 1);
 
   pub_debug_values_ = pnh_.advertise<std_msgs::Float64MultiArray>("debug/debug_values", 1);
+  pub_debug_list_ = pnh_.advertise<autoware_msgs::MpcDebugValues>("debug/debug_list", 1);
   sub_estimate_twist_ = nh_.subscribe("estimate_twist", 1, &MPCFollower::callbackEstimateTwist, this);
 };
 
@@ -541,6 +543,26 @@ bool MPCFollower::calculateMPC(double &vel_cmd, double &acc_cmd, double &steer_c
     debug_values.data.push_back(estimate_twist_.twist.linear.x);        // [15] current velocity
     debug_values.data.push_back(estimate_twist_.twist.angular.z);       // [16] estimate twist angular velocity (real angvel)
     pub_debug_values_.publish(debug_values);
+
+    autoware_msgs::MpcDebugValues debug_list;
+    debug_list.final_steering_command = steer_cmd;
+    debug_list.mpc_calculation_result = u_sat;
+    debug_list.feedforward_steering_value = Urefex(0);
+    debug_list.feedforward_steering_value_raw = std::atan(nearest_k * wheelbase_);
+    debug_list.current_steering_angle = steer;
+    debug_list.lateral_error = err_lat;
+    debug_list.current_pose_yaw = tf2::getYaw(vehicle_status_.pose.orientation);
+    debug_list.nearest_pose_yaw = tf2::getYaw(nearest_pose.orientation);
+    debug_list.yaw_error = yaw_err;
+    debug_list.command_velocitys = vel_cmd;
+    debug_list.measured_velocity = vehicle_status_.twist.linear.x;
+    debug_list.angvel_from_steer_comand = curr_v * tan(steer_cmd) / wheelbase_;
+    debug_list.angvel_from_measured_steer = curr_v * tan(steer) / wheelbase_;
+    debug_list.angvel_from_path_curvature = curr_v * nearest_k;
+    debug_list.nearest_path_curvature = nearest_k;
+    debug_list.current_velocity = estimate_twist_.twist.linear.x;
+    debug_list.estimate_twist_angular_velocity = estimate_twist_.twist.angular.z;
+    pub_debug_list_.publish(debug_list);
   }
 
   return true;

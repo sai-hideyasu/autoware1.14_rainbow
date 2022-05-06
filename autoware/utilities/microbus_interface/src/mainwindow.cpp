@@ -245,6 +245,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 	connect(ui->sb_target_deceleration, SIGNAL(valueChanged(double)), this, SLOT(car_target_deceleration_change(double)));
 	connect(ui->bt_track_excess_acc, SIGNAL(clicked()), this, SLOT(click_track_excess_acc()));
 	connect(ui->bt_track_excess_stop, SIGNAL(clicked()), this, SLOT(click_track_excess_stop()));
+	connect(ui->bt_yure, SIGNAL(clicked()), this, SLOT(click_yure()));
 
 	nh_ = nh;  private_nh_ = p_nh;
 
@@ -2817,6 +2818,13 @@ void MainWindow::click_track_excess_stop()
 {
 	std::ofstream ofs("/tmp/track_irregular", std::ios_base::app);
 	ofs << waypoint_param_.id << "," << "過停止\n";
+	ofs.close();
+}
+
+void MainWindow::click_yure()
+{
+	std::ofstream ofs("/tmp/track_irregular", std::ios_base::app);
+	ofs << waypoint_param_.id << "," << "ゆれ\n";
 	ofs.close();
 }
 

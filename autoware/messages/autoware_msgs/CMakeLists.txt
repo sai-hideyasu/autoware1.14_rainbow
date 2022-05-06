@@ -113,6 +113,7 @@ add_message_files(
     TrafficLightI2V.msg
     NearOncomingObs.msg
     CarCruiseStatus.msg
+    MpcDebugValues.msg
 )
 
 add_service_files(

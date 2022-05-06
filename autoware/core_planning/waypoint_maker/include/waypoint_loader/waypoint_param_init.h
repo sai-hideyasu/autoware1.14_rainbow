@@ -108,7 +108,7 @@ namespace waypoint_maker
 		wp->waypoint_param.clothoid_move_lane_length = ((map.find("clothoid_move_lane_length") != map.end()) ? std::stod(map["clothoid_move_lane_length"]) : 0);
 		wp->waypoint_param.auto_waypoint_change = ((map.find("auto_waypoint_change") != map.end()) ? std::stoi(map["auto_waypoint_change"]) : 0);
 		wp->waypoint_param.pub_light_color = ((map.find("pub_light_color") != map.end()) ? std::stoi(map["pub_light_color"]) : -1);
-		wp->waypoint_param.steer_actual_plus = ((map.find("steer_actual_plus") != map.end()) ? std::stoi(map["steer_actual_plus"]) : -210);//-176);
+		wp->waypoint_param.steer_actual_plus = ((map.find("steer_actual_plus") != map.end()) ? std::stoi(map["steer_actual_plus"]) : -220);//-176);
 		wp->waypoint_param.steer_actual_plus_sub = ((map.find("steer_actual_plus_sub") != map.end()) ? std::stoi(map["steer_actual_plus_sub"]) : 0);
 		//wp->waypoint_param.i2v_start = ((map.find("i2v_start") != map.end()) ? std::stoi(map["i2v_start"]) : 0);
 		wp->waypoint_param.signal_select_topic = ((map.find("signal_select_topic") != map.end()) ? map["signal_select_topic"] : "/light_color_yolo");
