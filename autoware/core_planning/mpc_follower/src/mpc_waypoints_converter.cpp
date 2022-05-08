@@ -17,6 +17,7 @@
 #include <iostream>
 #include <ros/ros.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
 #include <autoware_msgs/Lane.h>
 
 class MPCWaypointsConverter
@@ -24,11 +25,12 @@ class MPCWaypointsConverter
 public:
   MPCWaypointsConverter()
   {
-    pub_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/mpc_waypoints", 1);
+    pub_mpc_waypoints_ = nh_.advertise<autoware_msgs::Lane>("/mpc_waypoints", 1);
+    pub_twist_gate_vel_ = nh_.advertise<std_msgs::Float64>("/twist_gate_vel", 1);
     sub_closest_waypoint_ = nh_.subscribe("/closest_waypoint", 1, &MPCWaypointsConverter::callbackClosestWaypoints, this);
     sub_base_waypoints_ = nh_.subscribe("/base_waypoints", 1, &MPCWaypointsConverter::callbackBaseWaypoints, this);
     sub_final_waypoints_ = nh_.subscribe("/final_waypoints", 1, &MPCWaypointsConverter::callbackFinalWaypoints, this);
-
+    sub_current_velocity_ = nh_.subscribe("/current_velocity", 1, &MPCWaypointsConverter::callbackCurrentVelocity, this);
     closest_idx_ = 0;
     back_waypoints_num_ = 10;
     front_waypoints_num_ = 50;
@@ -37,13 +39,22 @@ public:
 
 private:
   ros::NodeHandle nh_, pnh_;
-  ros::Publisher pub_waypoints_;
+  ros::Publisher pub_mpc_waypoints_, pub_twist_gate_vel_;
   ros::Subscriber sub_closest_waypoint_, sub_base_waypoints_, sub_final_waypoints_, sub_current_velocity_;
 
   autoware_msgs::Lane base_waypoints_;
   int closest_idx_;
   int back_waypoints_num_;
   int front_waypoints_num_;
+  const int CURRENT_VEL_LIST_SIZE = 10;
+  std::vector<geometry_msgs::TwistStamped> current_velocity_list_;
+
+  void callbackCurrentVelocity(const geometry_msgs::TwistStamped &msg)
+  {
+    current_velocity_list_.push_back(msg);
+    if(current_velocity_list_.size() > CURRENT_VEL_LIST_SIZE)
+      current_velocity_list_.erase(current_velocity_list_.begin());
+  }
 
   void callbackClosestWaypoints(const std_msgs::Int32 msg)
   {
@@ -65,6 +76,30 @@ private:
       ROS_WARN("base_waypoints_.waypoints.size() - 1 = %d, closest_idx_ = %d", (int)base_waypoints_.waypoints.size(), closest_idx_);
       return;
     }
+
+    if(current_velocity_list_.size() <= 1)
+    {
+      ROS_WARN("current_velocity_size <= 1");
+      return;
+    }
+
+    double cur_vel_ave = 0;
+    for(const geometry_msgs::TwistStamped v : current_velocity_list_)
+    {
+      cur_vel_ave += v.twist.linear.x;
+    }
+    cur_vel_ave /= current_velocity_list_.size();
+
+    double cur_acc_ave = 0;
+    for(int i=1; i<current_velocity_list_.size(); i++)
+    {
+      double v1 = current_velocity_list_[i].twist.linear.x;
+      double v2 = current_velocity_list_[i-1].twist.linear.x;
+      ros::Duration rostime = current_velocity_list_[i].header.stamp - current_velocity_list_[i-1].header.stamp;
+      double dtime = rostime.sec + rostime.nsec * 1E-9;
+      cur_acc_ave += (v1 - v2) / dtime;
+    }
+    cur_acc_ave /= current_velocity_list_.size() - 1;
 
     auto sq_dist = [](const geometry_msgs::Point &a, const geometry_msgs::Point &b) {
       const double dx = a.x - b.x;
@@ -100,15 +135,22 @@ private:
     {
       mpc_waypoints.waypoints.push_back(base_waypoints_.waypoints.at(i));
       mpc_waypoints.waypoints.back().twist = final_waypoints.waypoints[1].twist;
+      //急激な経路速度変化にともなうステアの急変化を防ぐための工夫
+      mpc_waypoints.waypoints.back().twist.twist.linear.x = cur_vel_ave;
     }
 
     int final_end = std::min(front_waypoints_num_ + 1, (int)final_waypoints.waypoints.size());
     for (int i = 1; i < final_end; ++i)
     {
       mpc_waypoints.waypoints.push_back(final_waypoints.waypoints.at(i));
+      //急激な経路速度変化にともなうステアの急変化を防ぐための工夫
+      mpc_waypoints.waypoints.back().twist.twist.linear.x = cur_vel_ave;
     }
 
-    pub_waypoints_.publish(mpc_waypoints);
+    std_msgs::Float64 twist_gate_vel;
+    twist_gate_vel.data = cur_vel_ave;
+    pub_twist_gate_vel_.publish(twist_gate_vel);
+    pub_mpc_waypoints_.publish(mpc_waypoints);
   }
 };
 

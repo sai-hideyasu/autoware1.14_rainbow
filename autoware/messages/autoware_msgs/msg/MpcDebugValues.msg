@@ -15,3 +15,4 @@ float64 angvel_from_path_curvature
 float64 nearest_path_curvature
 float64 current_velocity
 float64 estimate_twist_angular_velocity
+int32 prediction_horizon

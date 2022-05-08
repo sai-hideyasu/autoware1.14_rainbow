@@ -43,6 +43,7 @@ TwistGate::TwistGate(const ros::NodeHandle& nh, const ros::NodeHandle& private_n
   , timeout_period_(10.0)
   , command_mode_(CommandMode::AUTO)
   , previous_command_mode_(CommandMode::AUTO)
+  , final_way_vel_(0)
 {
   private_nh_.param<double>("loop_rate", loop_rate_, 30.0);
   private_nh_.param<bool>("use_decision_maker", use_decision_maker_, false);
@@ -52,6 +53,7 @@ TwistGate::TwistGate(const ros::NodeHandle& nh, const ros::NodeHandle& private_n
   vehicle_cmd_pub_ = nh_.advertise<vehicle_cmd_msg_t>("/vehicle_cmd", 1, true);
   remote_cmd_sub_ = nh_.subscribe("/remote_cmd", 1, &TwistGate::remoteCmdCallback, this);
   config_sub_ = nh_.subscribe("config/twist_filter", 1, &TwistGate::configCallback, this);
+  final_vel_sub_ = nh_.subscribe("/twist_gate_vel", 1, &TwistGate::finalVelCallback, this);
 
   timer_ = nh_.createTimer(ros::Duration(1.0 / loop_rate_), &TwistGate::timerCallback, this);
 
@@ -164,6 +166,11 @@ void TwistGate::watchdogTimer()
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+}
+
+void TwistGate::finalVelCallback(const std_msgs::Float64& msg)
+{
+  final_way_vel_ = msg.data;
 }
 
 void TwistGate::remoteCmdCallback(const remote_msgs_t::ConstPtr& input_msg)
@@ -284,7 +291,8 @@ void TwistGate::ctrlCmdCallback(const autoware_msgs::ControlCommandStamped::Cons
     twist_gate_msg_.header.stamp = input_msg->header.stamp;
     twist_gate_msg_.header.seq++;
     twist_gate_msg_.ctrl_cmd = input_msg->cmd;
-
+    //急激な経路速度変化にともなうステアの急変化を防ぐための工夫
+    twist_gate_msg_.ctrl_cmd.linear_velocity = final_way_vel_;
     checkState();
   }
 }

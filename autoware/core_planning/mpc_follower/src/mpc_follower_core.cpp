@@ -142,6 +142,7 @@ MPCFollower::MPCFollower()
   sub_vehicle_status_ = nh_.subscribe("/vehicle_status", 1, &MPCFollower::callbackVehicleStatus, this);
   sub_vehicle_status_microbus_ = nh_.subscribe("/microbus/vehicle_status", 1, &MPCFollower::callbackVehicleStatus, this);
   sub_waypoint_param_ = nh_.subscribe("/waypoint_param", 1, &MPCFollower::callbackWaypointParam, this);
+  sub_car_cruise_status_ = nh_.subscribe("/car_cruise_status", 1, &MPCFollower::callbackCarCruiseStatus, this);
 
   /* for debug */
   pub_debug_filtered_traj_ = pnh_.advertise<visualization_msgs::Marker>("debug/filtered_traj", 1);
@@ -152,6 +153,11 @@ MPCFollower::MPCFollower()
   pub_debug_list_ = pnh_.advertise<autoware_msgs::MpcDebugValues>("debug/debug_list", 1);
   sub_estimate_twist_ = nh_.subscribe("estimate_twist", 1, &MPCFollower::callbackEstimateTwist, this);
 };
+
+void MPCFollower::callbackCarCruiseStatus(const autoware_msgs::CarCruiseStatus &msg)
+{
+  car_cruise_status_ = msg;
+}
 
 void MPCFollower::callbackWaypointParam(const autoware_msgs::WaypointParam &msg)
 {
@@ -213,6 +219,15 @@ void MPCFollower::timerCallback(const ros::TimerEvent &te)
 bool MPCFollower::calculateMPC(double &vel_cmd, double &acc_cmd, double &steer_cmd, double &steer_vel_cmd)
 {
   const int N = mpc_param_.prediction_horizon;
+  /*int N;
+  if(car_cruise_status_.distance_x_m == -1.0) N = mpc_param_.prediction_horizon;
+  else
+  {
+    N = (car_cruise_status_.expected_collision_time / mpc_param_.prediction_sampling_time) + 0.5;//前方車両までの到達時間 / サイクルタイム = mpc_param_.prediction_horizon
+    N = std::min(std::max(N, 10), mpc_param_.prediction_horizon);
+  }*/
+  prediction_horizon_ = N;
+
   const double DT = mpc_param_.prediction_sampling_time;
   const int DIM_X = vehicle_model_ptr_->getDimX();
   const int DIM_U = vehicle_model_ptr_->getDimU();
@@ -562,6 +577,7 @@ bool MPCFollower::calculateMPC(double &vel_cmd, double &acc_cmd, double &steer_c
     debug_list.nearest_path_curvature = nearest_k;
     debug_list.current_velocity = estimate_twist_.twist.linear.x;
     debug_list.estimate_twist_angular_velocity = estimate_twist_.twist.angular.z;
+    debug_list.prediction_horizon = prediction_horizon_;
     pub_debug_list_.publish(debug_list);
   }
 

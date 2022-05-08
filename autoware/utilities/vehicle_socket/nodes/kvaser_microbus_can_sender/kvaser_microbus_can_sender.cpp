@@ -2370,9 +2370,9 @@ private:
 		if(ret > waypoint_param_.accel_stroke_cap) ret = waypoint_param_.accel_stroke_cap;
 		if(ret > accel_stroke_cap_mobileye_) ret = accel_stroke_cap_mobileye_;
 		if(ret > accel_stroke_cap_temporary_stopper_) ret = accel_stroke_cap_temporary_stopper_;
-		/*std::stringstream str_pub;
+		std::stringstream str_pub;
 		str_pub << cmd_velocity_kmh - current_velocity_kmh << "," << setting_.k_accel_p_velocity << "*" << e << "=" << setting_.k_accel_p_velocity*e << "," << setting_.k_accel_i_velocity << "*" << e_i << "=" << setting_.k_accel_i_velocity*e_i << "," << setting_.k_accel_d_velocity << "*" << e_d_ << "=" << setting_.k_accel_d_velocity*e_d_ << "," << target_accel_stroke << "," << ret;
-		pub_tmp_.publish(str_pub.str());*/
+		pub_tmp_.publish(str_pub.str());
 		//if(ret < 100) ret = 100;//下駄を履かせて初速を上げる
 		send_step_ = accle_stroke_step;
 		pid_params.set_stroke_prev(ret);
@@ -2633,7 +2633,7 @@ private:
 		}
 		//!< ここまで okanuma
 
-		std::stringstream str_pub;
+		//std::stringstream str_pub;
 		//前方車両の距離に対するPID_P
 		const double front_car_distance_kp = 0.5;
 		double front_car_distnace_stroke_plus = DBL_MAX; 
@@ -2643,13 +2643,13 @@ private:
 			&& car_cruise_status_.distance_x_m != -1)
 		{
 			front_car_distnace_stroke_plus = -(car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
-			str_pub << "mobileye," << front_car_distnace_stroke_plus;
+			//str_pub << "mobileye," << front_car_distnace_stroke_plus;
 		}
 
 		double distance_stroke_plus = 0;
 		if(stopper_distance_.distance < car_cruise_status_.distance_x_m && stopper_distance_.distance != -1)
 		{
-			str_pub.clear();
+			//str_pub.clear();
 			const double stop_line_kp = 2;
 			double stop_line_distance_stroke_plus = DBL_MAX;
 			if(car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_NO
@@ -2657,7 +2657,7 @@ private:
 				&& stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)
 			{
 				stop_line_distance_stroke_plus = -(stopper_distance_.distance_rss - stopper_distance_.distance) * stop_line_kp;
-				str_pub << "stopD,stop_line_distance_stroke_plus";
+				//str_pub << "stopD,stop_line_distance_stroke_plus";
 			}
 			if(stop_line_distance_stroke_plus != DBL_MAX) distance_stroke_plus = stop_line_distance_stroke_plus;
 		}
@@ -2665,7 +2665,7 @@ private:
 		{
 			if(front_car_distnace_stroke_plus != DBL_MAX) distance_stroke_plus = front_car_distnace_stroke_plus;
 		}
-		pub_tmp_.publish(str_pub.str());
+		//pub_tmp_.publish(str_pub.str());
 
 		//PID計算
 		double target_brake_stroke = setting_.k_brake_p_velocity * e +

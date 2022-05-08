@@ -27,6 +27,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
 #include <std_msgs/String.h>
 
 #include "autoware_config_msgs/ConfigTwistFilter.h"
@@ -69,7 +70,7 @@ private:
   void emergencyCmdCallback(const vehicle_cmd_msg_t::ConstPtr& input_msg);
   void timerCallback(const ros::TimerEvent& e);
   void configCallback(const autoware_config_msgs::ConfigTwistFilter& msg);
-
+  void finalVelCallback(const std_msgs::Float64& msg);
   void resetVehicleCmdMsg();
 
   // spinOnce for test
@@ -82,6 +83,7 @@ private:
   ros::Publisher vehicle_cmd_pub_;
   ros::Subscriber remote_cmd_sub_;
   ros::Subscriber config_sub_;
+  ros::Subscriber final_vel_sub_;
   std::map<std::string, ros::Subscriber> auto_cmd_sub_stdmap_;
   ros::Timer timer_;
 
@@ -91,6 +93,7 @@ private:
   ros::Time state_time_;
   ros::Duration timeout_period_;
   double loop_rate_;
+  double final_way_vel_;
 
   std::thread watchdog_timer_thread_;
   bool is_alive;

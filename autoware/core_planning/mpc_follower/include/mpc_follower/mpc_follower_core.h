@@ -46,6 +46,7 @@
 #include <autoware_msgs/Lane.h>
 #include <autoware_msgs/VehicleStatus.h>
 #include <autoware_msgs/MpcDebugValues.h>
+#include <autoware_msgs/CarCruiseStatus.h>
 
 #include "mpc_follower/mpc_utils.h"
 #include "mpc_follower/mpc_trajectory.h"
@@ -83,7 +84,8 @@ private:
   ros::Subscriber sub_pose_;              //!< @brief subscriber for current pose
   ros::Subscriber sub_vehicle_status_;    //!< @brief subscriber for currrent vehicle status
   ros::Subscriber sub_vehicle_status_microbus_;    //!< @brief subscriber for currrent vehicle status(microbus)
-  ros::Subscriber sub_waypoint_param_; 
+  ros::Subscriber sub_waypoint_param_;
+  ros::Subscriber sub_car_cruise_status_;//!<前方車両情報
   ros::Timer timer_control_;              //!< @brief timer for control command computation
 
   MPCTrajectory ref_traj_;                                   //!< @brief reference trajectory to be followed
@@ -148,6 +150,10 @@ private:
   bool my_velocity_ok_; //< @brief flag for validity of current velocity
   bool my_steering_ok_; //< @brief flag for validity of steering angle
 
+  /* sai add */
+  autoware_msgs::CarCruiseStatus car_cruise_status_;//前方車両情報
+  int prediction_horizon_;
+
   /**
    * @brief compute and publish control command for path follow with a constant control period
    */
@@ -201,6 +207,8 @@ private:
    * @param [out] steer_vel_cmd steering rotation speed command
    */
   bool calculateMPC(double &vel_cmd, double &acc_cmd, double &steer_cmd, double &steer_vel_cmd);
+
+  void callbackCarCruiseStatus(const autoware_msgs::CarCruiseStatus &msg);
 
   /* debug */
   bool show_debug_info_;      //!< @brief flag to display debug info
