@@ -326,6 +326,7 @@ MainWindow::MainWindow(ros::NodeHandle nh, ros::NodeHandle p_nh, QWidget *parent
 	sub_front_mobileye_ = nh.subscribe("/mobileye_tracker/front_mobileye", 10 , &MainWindow::callbackFrontMobileye, this);
 	sub_mobileye_cmd_param_ = nh.subscribe("/mobileye_tracker/cmd_param", 10 , &MainWindow::callbackMobileyeCmdParam, this);
 	sub_tracking_type_ = nh.subscribe("/mobileye_tracker/track_pattern", 10 , &MainWindow::callbackTrackingType, this);
+	sub_config_voxel_grid_filter_ = nh.subscribe("/config/voxel_grid_filter", 10 , &MainWindow::callbackVoxelGirdFilter, this);
 
 	can_status_.angle_limit_over = can_status_.position_check_stop = true;
 	error_text_lock_ = false;
@@ -1218,10 +1219,21 @@ void MainWindow::window_updata()
 	}
 
 	{
-		std::stringstream str_ndt_stat, str_gnss_ok, str_ndt_string;
+		std::stringstream str_ndt_stat, str_ndt_score, str_ndt_time, str_leaf_size, str_range;
+
 		str_ndt_stat << std::fixed << std::setprecision(keta) << ndt_stat_.score;
 		ui->tx_ndt_score->setText(str_ndt_stat.str().c_str());
 		ui->tx2_ndt_score->setText(str_ndt_stat.str().c_str());
+
+		str_ndt_time << std::fixed << std::setprecision(keta) << ndt_stat_.exe_time;
+		ui->tx2_ndt_time->setText(str_ndt_time.str().c_str());
+
+		str_leaf_size << std::fixed << std::setprecision(keta) << config_voxel_grid_filter_.voxel_leaf_size;
+		ui->tx2_leaf_size->setText(str_leaf_size.str().c_str());
+
+		str_range << std::fixed << std::setprecision(keta) << config_voxel_grid_filter_.measurement_range;
+		ui->tx2_ndt_range->setText(str_range.str().c_str());
+
 		if(gnss_stat_ == 3)
 		{
 			ui->tx_gnss_ok->setPalette(palette_gnss_deviation_ok_);
@@ -1236,6 +1248,7 @@ void MainWindow::window_updata()
 			ui->tx2_gnss_ok->setPalette(palette_gnss_deviation_error_);
 			ui->tx2_gnss_ok->setText("NG");
 		}
+
 		if(ndt_stat_string_ == "NDT_OK")
 		{
 			ui->tx_ndt_ok->setPalette(palette_gnss_deviation_ok_);
@@ -2018,7 +2031,7 @@ void MainWindow::callbackLoadName(const autoware_msgs::WaypointsSerialNumLaunch 
 	waypoints_serial_num_ = msg;*/
 
 	std::stringstream ss;
-	ss << (auto_route_loop_count_.loop - 1) * 2 << "便\n";
+	//ss << (auto_route_loop_count_.loop - 1) * 2 << "便\n";
 	//ss << (auto_route_loop_count_.loop) << "ライド目\n";
 	std::string text = ss.str() + msg.route_current + "\n↓\n" + msg.route_next;
 	ui->tx4_load_name->setText(text.c_str());
@@ -2117,6 +2130,11 @@ void MainWindow::callbackMobileyeCmdParam(const autoware_msgs::MobileyeCmdParam:
 void MainWindow::callbackTrackingType(const std_msgs::String::ConstPtr &msg)
 {
 	tracking_type_ = msg->data;
+}
+
+void MainWindow::callbackVoxelGirdFilter(const autoware_config_msgs::ConfigVoxelGridFilter::ConstPtr& msg)
+{
+	config_voxel_grid_filter_ = *msg;
 }
 
 void MainWindow::publish_emergency_clear()

@@ -1108,6 +1108,10 @@ subs :
       desc : panel_view desc sample
       cmd  : roslaunch runtime_manager panel_view.launch
       param: panel_view
+    - name : map_waypoints_select
+      desc : map_waypoints_select
+      cmd  : roslaunch map_file map_waypoints_select.launch
+      param: map_waypoints_select
 
   - name : Decision
     desc : decision groups
@@ -7528,6 +7532,46 @@ params :
       min   : 0.0
       max   : 10.0
       v     : 0.0
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+
+  - name  : map_waypoints_select
+    vars  :
+    - name      : outpath
+      desc      : outpath desc sample
+      label     : outpath
+      kind      : path
+      path_type : save
+      v         : ''
+      cmd_param :
+        var_name    : outpath
+        dash        : ''
+        delim       : ':='
+    - name  : distance_th
+      desc  : distance_th
+      label : distance_th(m)
+      min   : 0.0
+      max   : 1000.0
+      v     : 100.0
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : start_id
+      desc  : start_id
+      label : start_id
+      min   : 0
+      max   : 100000
+      v     : 0
+      cmd_param :
+        dash        : ''
+        delim       : ':='
+    - name  : end_id
+      desc  : end_id
+      label : end_id
+      min   : 0
+      max   : 100000
+      v     : 0
       cmd_param :
         dash        : ''
         delim       : ':='

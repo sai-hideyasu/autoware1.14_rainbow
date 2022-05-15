@@ -251,6 +251,7 @@ private:
 	void callbackGlobalLanes(const autoware_msgs::LaneArray::ConstPtr &msg)
 	{
 		waypoints_.clear();
+
 		std::cout << "read lanes" << std::endl;
 		for(const autoware_msgs::Lane &lane : msg->lanes)
 		{

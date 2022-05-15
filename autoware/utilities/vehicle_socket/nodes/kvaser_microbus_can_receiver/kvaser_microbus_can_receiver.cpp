@@ -44,8 +44,8 @@ private:
 	//liesse params
 	double handle_angle_right_max = 730;
 	double handle_angle_left_max = 765;
-	//double wheelrad_to_steering_can_value_left = 20691.8161699557;
-	//double wheelrad_to_steering_can_value_right = 20802.5331916036;
+	double wheelrad_to_steering_can_value_left_ = 25009.6727514125;//liesse 20935.4958411006;//cmdのwheel指令をcanのハンドル指令に変換する係数(左回り用)
+	double wheelrad_to_steering_can_value_right_ = 26765.9140133745;//liesse 20791.4464661611;//cmdのwheel指令をcanのハンドル指令に変換する係数(右回り用)
 	double angle_magn_right = handle_angle_right_max / 15000;
 	double angle_magn_left = handle_angle_left_max / 15000;
 
@@ -121,6 +121,9 @@ public:
 		prev_time_502_ = ros::Time::now();
 		read_id_flag_.read501 = read_id_flag_.read502 = false;
 		kc.init(kvaser_channel, canBITRATE_500K);
+
+		nh_.param<double>("/vehicle_info/wheelrad_to_steering_can_value_left", wheelrad_to_steering_can_value_left_, 25009.6727514125);
+		nh_.param<double>("/vehicle_info/wheelrad_to_steering_can_value_right", wheelrad_to_steering_can_value_right_, 26765.9140133745);
 
 		pub_microbus_can_100_string_ = nh_.advertise<std_msgs::String>("/microbus/can_receive100_string", 10);
 		pub_microbus_can_501_ = nh_.advertise<autoware_can_msgs::MicroBusCan501>("/microbus/can_receive501", 10);
@@ -258,7 +261,7 @@ public:
 
 					unsigned char *vel_tmp = (unsigned char*)&can.velocity_actual;
 					vel_tmp[0] = data[7];  vel_tmp[1] = data[6];
-					//can.velocity_actual /= 2.0;
+					can.velocity_actual /= 2.0;//割る２は2022_05_15で入れた暫定対処
 
 					short acceleration = 0;
 					can.cycle_time = nowtime.toSec() - prev_time_502_.toSec();
@@ -291,7 +294,6 @@ public:
 					can.velocity_median = velocity_med[(int)std::round(velocity_med.size()/(double)2.0)];
 
 					can.velocity_mps = (double)can.velocity_actual / 100.0 / 3.6;
-
 					unsigned char *str_tmp = (unsigned char*)&can.angle_actual;
 					str_tmp[0] = data[5];  str_tmp[1] = data[4];
 					can.angle_actual += waypoint_param_.steer_actual_plus + waypoint_param_.steer_actual_plus_sub + steer_sub_interface_correction_;//steer_actual_plus_param_;//config_.steer_actual_plus;//(330);//(config_.angle_actual_correction);//ズレ補正
@@ -303,6 +305,8 @@ public:
 					if(angle_list_.size() == list_pushback_size) angle_list_.resize(list_pushback_size);
 					if(can.velocity_actual >= 0) can.angle_deg = can.angle_actual * angle_magn_left;
 					else can.angle_deg = can.angle_actual * angle_magn_right;
+					//if(can.angle_actual > 0) can.wheel_deg = can.angle_actual / wheelrad_to_steering_can_value_left_;
+					//else can.wheel_deg = can.angle_actual / wheelrad_to_steering_can_value_right_;
 
 					unsigned char *steer_voltage = (unsigned char*)&can.angle_target_voltage;
 					steer_voltage[0] = data[3];  steer_voltage[1] = data[2];

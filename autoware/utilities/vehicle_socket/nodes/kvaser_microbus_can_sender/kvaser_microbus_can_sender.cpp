@@ -1596,7 +1596,7 @@ private:
 	void TwistPoseCallback(const geometry_msgs::TwistStampedConstPtr &twist_msg,
 	                       const geometry_msgs::PoseStampedConstPtr &pose_msg)
 	{
-		localizer_timer_ = twist_msg->header.stamp;
+		localizer_timer_ = ros::Time::now();//twist_msg->header.stamp;
 
 		std::cout << "current velocity : " << twist_msg->twist.linear.x << std::endl;
 		std::cout << "current pose : "      << pose_msg->pose.position.x << "," << pose_msg->pose.position.y << std::endl;
@@ -2370,9 +2370,9 @@ private:
 		if(ret > waypoint_param_.accel_stroke_cap) ret = waypoint_param_.accel_stroke_cap;
 		if(ret > accel_stroke_cap_mobileye_) ret = accel_stroke_cap_mobileye_;
 		if(ret > accel_stroke_cap_temporary_stopper_) ret = accel_stroke_cap_temporary_stopper_;
-		std::stringstream str_pub;
+		/*std::stringstream str_pub;
 		str_pub << cmd_velocity_kmh - current_velocity_kmh << "," << setting_.k_accel_p_velocity << "*" << e << "=" << setting_.k_accel_p_velocity*e << "," << setting_.k_accel_i_velocity << "*" << e_i << "=" << setting_.k_accel_i_velocity*e_i << "," << setting_.k_accel_d_velocity << "*" << e_d_ << "=" << setting_.k_accel_d_velocity*e_d_ << "," << target_accel_stroke << "," << ret;
-		pub_tmp_.publish(str_pub.str());
+		pub_tmp_.publish(str_pub.str());*/
 		//if(ret < 100) ret = 100;//下駄を履かせて初速を上げる
 		send_step_ = accle_stroke_step;
 		pid_params.set_stroke_prev(ret);
@@ -2479,6 +2479,8 @@ private:
 					|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
 					&& car_cruise_status_.distance_x_m != -1)
 				{
+					routine_str = "Bpid";
+					std::cout << "Bpid," << stroke << "," << car_cruise_status_.distance_rss_m << "," << car_cruise_status_.distance_x_m << "," << front_car_distance_kp << std::endl;
 					double val = (car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
 					val = std::min(std::max(val, -50.0), 50.0);
 					stroke += val;
@@ -2500,6 +2502,9 @@ private:
 			std::cout << "ACCEL_PEDAL_STROKE_OFFSET_" << std::endl;
 			//pid_params.set_brake_e_prev_velocity(0);
 			//pid_params.set_brake_e_prev_acceleration(0);
+			pid_params.clear_diff_velocity();
+			pid_params.clear_diff_acceleration();
+			pid_params.clear_diff_distance();
 			pid_params.set_accel_e_prev_velocity(0);
 			pid_params.set_accel_e_prev_acceleration(0);
 			pid_params.set_stroke_prev(0);
@@ -2533,7 +2538,7 @@ private:
 		//!< ブレーキの踏み代(積分項のbrake_i)を加速度によって変更する okanuma
 		double velocity_stamp = current_velocity_.header.stamp.sec + current_velocity_.header.stamp.nsec * 1E-9;
 		//if(pid_params.get_stop_stroke_prev() >= 180 && stopper_distance_.distance > 0)
-		if(stopper_distance_.distance > 0)
+		if(stopper_distance_.distance >= 0)
 		{
 			routine_str = "brake3";
 			if(brake_past_sec != velocity_stamp)
@@ -2618,7 +2623,7 @@ private:
 	*/					
 					}
 				}
-			}
+			}//brake3
 
 			brake_past_velocity = current_velocity_kmh / 3.6;	//!<速度保管
 			brake_past_sec = velocity_stamp;	//!< 現時刻保存
@@ -2633,21 +2638,34 @@ private:
 		}
 		//!< ここまで okanuma
 
-		//std::stringstream str_pub;
+		std::stringstream str_pub;
 		//前方車両の距離に対するPID_P
-		const double front_car_distance_kp = 0.5;
+		const double front_car_distance_kp = 1.5;
 		double front_car_distnace_stroke_plus = DBL_MAX; 
 		if((car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_ACCELERATION
 			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION1
-			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2)
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_DECELERATION2
+			|| car_cruise_status_.tracking_mode == autoware_msgs::CarCruiseStatus::TRACKING_STOP)
 			&& car_cruise_status_.distance_x_m != -1)
 		{
-			front_car_distnace_stroke_plus = -(car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
-			//str_pub << "mobileye," << front_car_distnace_stroke_plus;
+			front_car_distnace_stroke_plus = (car_cruise_status_.distance_rss_m - car_cruise_status_.distance_x_m) * front_car_distance_kp;
+			front_car_distnace_stroke_plus = std::max(std::min(front_car_distnace_stroke_plus, 20.0), -10.0);
 		}
 
 		double distance_stroke_plus = 0;
-		if(stopper_distance_.distance < car_cruise_status_.distance_x_m && stopper_distance_.distance != -1)
+		const double stop_line_kp = 1.5;
+		if(stopper_distance_.send_process == autoware_msgs::StopperDistance::OBSTACLE)
+		{
+			if(front_car_distnace_stroke_plus != DBL_MAX) distance_stroke_plus = front_car_distnace_stroke_plus;
+		}
+		else if(stopper_distance_.send_process == autoware_msgs::StopperDistance::TEMPORARY_STOPPER
+			&& stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)
+		{
+			distance_stroke_plus = (stopper_distance_.distance_rss - stopper_distance_.distance) * stop_line_kp;
+			distance_stroke_plus = std::max(std::min(distance_stroke_plus, 20.0), -10.0);
+		}
+		
+		/*if(stopper_distance_.distance < car_cruise_status_.distance_x_m && stopper_distance_.distance != -1)
 		{
 			//str_pub.clear();
 			const double stop_line_kp = 2;
@@ -2656,7 +2674,8 @@ private:
 				&& stopper_distance_.send_process == autoware_msgs::StopperDistance::TEMPORARY_STOPPER
 				&& stopper_distance_.send_process == autoware_msgs::StopperDistance::SIGNAL)
 			{
-				stop_line_distance_stroke_plus = -(stopper_distance_.distance_rss - stopper_distance_.distance) * stop_line_kp;
+				stop_line_distance_stroke_plus = (stopper_distance_.distance_rss - stopper_distance_.distance) * stop_line_kp;
+				stop_line_distance_stroke_plus = std::max(std::min(stop_line_distance_stroke_plus, 20.0), -10.0);
 				//str_pub << "stopD,stop_line_distance_stroke_plus";
 			}
 			if(stop_line_distance_stroke_plus != DBL_MAX) distance_stroke_plus = stop_line_distance_stroke_plus;
@@ -2664,8 +2683,9 @@ private:
 		else
 		{
 			if(front_car_distnace_stroke_plus != DBL_MAX) distance_stroke_plus = front_car_distnace_stroke_plus;
-		}
-		//pub_tmp_.publish(str_pub.str());
+		}*/
+		str_pub << "mobileye," << front_car_distnace_stroke_plus << "," << distance_stroke_plus;
+		pub_tmp_.publish(str_pub.str());
 
 		//PID計算
 		double target_brake_stroke = setting_.k_brake_p_velocity * e +
@@ -2674,6 +2694,7 @@ private:
 				distance_stroke_plus;
 		pid_params.set_brake_e_prev_velocity(e);
 		e_i_val_ = e_i;
+		std::cout << "distnace_stroke_plus," << distance_stroke_plus << std::endl;
 
 		/*std::stringstream str_pub;
 		str_pub << cmd_velocity_kmh - current_velocity_kmh << "," << setting_.k_brake_p_velocity << "*" << e << "=" << setting_.k_brake_p_velocity*e << "," << brake_i << "*" << e_i << "=" << brake_i*e_i << "," << setting_.k_brake_d_velocity << "*" << e_d_ << "=" << setting_.k_accel_d_velocity*e_d_ << "," << target_brake_stroke;
@@ -2768,7 +2789,7 @@ private:
 				}
 				else
 				{
-					routine_str = "brakeC";
+					//routine_str = "brakeC";
 					stop_distance_over_sum_ = 0;
 				}
 			}
@@ -2956,10 +2977,12 @@ pub_tmp_.publish(str_ret);*/
 			//std::cout << "if : " << cmd_velocity << " > " "0.0" << std::endl;
 			//std::cout << "if : " <<current_velocity << " > " << setting_.velocity_limit << std::endl;
 			//加速判定
-			std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
+			//std::cout << "kkk accel_avoidance_distance_min : " << accel_avoidance_distance_min_ << std::endl;
 
 			//停止線での加速判定 0.75は40km/hで走った場合に30m前で加速を止める
 			double accel_mode_avoidance_distance = (current_velocity > accel_avoidance_distance_min_) ? current_velocity * 0.75 : accel_avoidance_distance_min_;
+			//double accel_mode_avoidance_distance = stopper_distance_.distance_rss;
+			std::cout << "accel_avoidance_distance : " << accel_mode_avoidance_distance << std::endl;
 
 			/*std::stringstream str_pub;
 			str_pub << "tmp," << std::boolalpha << checkMobileyeObstacleStop(nowtime) << "," << fabs(cmd_velocity) << ">" << current_velocity << "," << current_velocity + setting_.acceptable_velocity_variation << "<" << setting_.velocity_limit << "," << stopper_distance_.distance << "," << accel_mode_avoidance_distance << "," << in_accel_mode_;
@@ -3069,6 +3092,8 @@ pub_tmp_.publish(str_ret);*/
 				pub_stroke_routine_.publish(routine_);
 				break;
 			}
+			std::cout << "routine," << routine_.data << std::endl;
+			std::cout << "stroke," << new_stroke << std::endl;
 			//ブレーキを離す場合、徐々に離す
 			/*if(pid_params.get_stroke_prev() < 0 && new_stroke >= 0)
 			{

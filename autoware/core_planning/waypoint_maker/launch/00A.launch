@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="load_csv" default="true" />
-  <arg name="multi_lane_csv" default="/home/sit/load_data/sibusawa/rainbow/0-nakamati-doramakan/2021_09_21_add_blinker_and_stop_line.csv" />
+  <arg name="multi_lane_csv" default="/home/sit/load_data/sibusawa/rainbow/0-nakamati-doramakan/2022_05_02_0A_waypoints_fix.csv" />
   <arg name="replanning_mode" default="False" />
   <arg name="realtime_tuning_mode" default="False" />
   <arg name="resample_mode" default="True" />
@@ -21,7 +21,7 @@
   <arg name="use_decision_maker" default="false" />
 
   <include file="$(find map_file)/launch/points_map_loader.launch">
-    <arg name="path_pcd" value="/home/sit/load_data/sibusawa/PCD100_JGD09/0A.pcd"/>
+    <arg name="path_pcd" value="/home/sit/load_data/sibusawa/PCD100_JGD09/number17.pcd"/>
   </include>
 
   <node pkg="rostopic" type="rostopic" name="can_drive_clutch_cut" args="pub /microbus/drive_clutch std_msgs/Bool
@@ -31,7 +31,7 @@
 
   <!-- node pkg="rostopic" type="rostopic" name="load_name" args="pub /load_name std_msgs/String 大河ドラマ館,北部運動公園"/ -->
   <node pkg="rostopic" type="rostopic" name="load_name" args="pub /load_name autoware_msgs/WaypointsSerialNumLaunch 
-    '{route_current: '仲町バス発着所',
+    '{route_current: '深谷駅',
       route_next: '大河ドラマ館',
       toAnext: '01A',
       toAback: '',

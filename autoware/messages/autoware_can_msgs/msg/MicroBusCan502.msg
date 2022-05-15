@@ -3,6 +3,7 @@ float64 cycle_time
 int16 angle_actual
 float64 angle_deg
 float64 angle_deg_acc
+#float64 wheel_deg
 uint16 angle_target_voltage
 int16 velocity_actual
 int16 velocity_average

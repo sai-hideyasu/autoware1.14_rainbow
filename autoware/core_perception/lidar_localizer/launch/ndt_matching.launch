@@ -13,7 +13,7 @@
   <arg name="use_local_transform" default="false" />
   <arg name="sync" default="false" />
   <arg name="output_log_data" default="false" />
-  <arg name="gnss_reinit_fitness" default="500.0" />
+  <arg name="gnss_reinit_fitness" default="20.0" />
 
   <!--node pkg="lidar_localizer" type="ndt_imu_stack" name="ndt_imu_stack" output="log"/-->
 

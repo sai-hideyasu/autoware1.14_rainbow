@@ -333,7 +333,7 @@ private:
 			|| obs.orig_data.obstacle_status == mobileye_560_660_msgs::ObstacleData::OBSTACLE_STATUS_STOPPED
 			|| obs.orig_data.obstacle_status == mobileye_560_660_msgs::ObstacleData::OBSTACLE_STATUS_PARKED
 			|| obs.orig_data.obstacle_status == mobileye_560_660_msgs::ObstacleData::OBSTACLE_STATUS_STANDING)//停止
-		{
+		{std::cout << "abc" << std::endl;
 			ros::Time nowtime = ros::Time::now();
 			if(velocity0_timer_ == ros::Time(0)) velocity0_timer_ = nowtime;
 			ros::Duration ros_time_diff = nowtime - velocity0_timer_;
@@ -838,7 +838,7 @@ private:
 		int hit_waypoint_index = -1; //判定waypoint
 		double x_adj = 0; //判定waypointのx微調整位置
 
-		int wc;
+		/*int wc;
 		double front_dis_sum = 0;
 		double front_fraction = 0;//wcのwaypoint位置から見た車両フロントの距離
 		for(wc=1; wc<lane->waypoints.size(); wc++)
@@ -854,10 +854,11 @@ private:
 				front_fraction = front_dis_sum - front_bumper_to_baselink_ - mobileye_virtual_bumper_;
 				break;
 			}
-		}
+		}*/
 
 		//経路上の正面車両を探索
-		for(int waycou=wc; waycou<lane->waypoints.size(); waycou++)
+		//for(int waycou=wc; waycou<lane->waypoints.size(); waycou++)]
+		for(int waycou=1; waycou<lane->waypoints.size(); waycou++)
 		{
 			const autoware_msgs::Waypoint waypoint = lane->waypoints[waycou];
 			const autoware_msgs::Waypoint prev_waypoint = lane->waypoints[waycou-1];
@@ -1024,7 +1025,8 @@ private:
 	//正面判定された車両情報がconfig_.obs_delete_time秒間更新が無かった場合、その車両情報を消去する
 	void callbackObsDeleteTimer(const ros::TimerEvent &e)
 	{
-		ros::Time ros_nowtime = ros::Time::now();//e.current_real;
+		//ros::Time ros_nowtime = ros::Time::now();
+		ros::Time ros_nowtime = e.current_real;
 		for(long i=mobileye_obstacle_info_list_.size()-1; i>=0; i--)
 		{
 			MobileyeObstacleInfo obs_info = mobileye_obstacle_info_list_[i];

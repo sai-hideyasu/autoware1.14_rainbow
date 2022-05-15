@@ -44,8 +44,11 @@ double targetFreeSpaceRSS(const double cur_mps, const double front_mps, const do
 	double free_running_distance_corr = 0;//cur_mps*3.6/2;//空走距離の速度補正
 	cur_space_ret = cur_space;
 	front_spalce_ret = front_space;
+
 	double rss = cur_space - front_space + free_running_distance_corr + min_free_running_distance;
 	double Lt = targetFreeSpace(cur_mps, cur_target_deceleration, cur_delay_time, min_free_running_distance);
+	std::cout << "cur_space," << cur_space << "," << front_space << "," << free_running_distance_corr << "," << min_free_running_distance << "," << Lt << std::endl;
+	std::cout << "a," << cur_free_running_distance << "," << cur_brakeing_distace << std::endl;
 	return std::max(std::min(Lt, rss), min_free_running_distance);
 }
 
@@ -118,6 +121,17 @@ private:
 		pubmsg.fixed_velocity = 0;
 
 		double dis = 0;
+		const double car_target_deceleration = 0.1;
+		const double front_target_deceleration = 0.5;
+		const double cur_delay_time = 1.0;
+		const double front_delay_time = 1.0;
+		const double min_free_running_distance = 0;
+		/*const double car_target_deceleration = -0.325;
+		const double front_target_deceleration = 0;
+		const double cur_delay_time = 1.0;
+		const double front_delay_time = 1.0;
+		const double min_free_running_distance = 0;*/
+
 		for(int i=1; i<msg.waypoints.size(); i++)
 		{
 			tf::Vector3 v1(msg.waypoints[i-1].pose.pose.position.x,
@@ -141,7 +155,11 @@ private:
 				else pubmsg.reach_time = (-current_vel_ave_ + std::sqrt(sqrt_val)) / current_acc_ave_;
 
 				double curr_space, front_space;
-				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0, -0.325, 0, 1.0, 1.0, 0, curr_space, front_space);
+				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0,
+					car_target_deceleration, front_target_deceleration,
+					cur_delay_time, front_delay_time,
+					min_free_running_distance, curr_space, front_space);
+				pubmsg.curr_vel_ave = current_vel_ave_;
 				break;
 			}
 			else if(waypoint_param.object_stop_line > 0)
@@ -156,7 +174,11 @@ private:
 				else pubmsg.reach_time = (-current_vel_ave_ + std::sqrt(sqrt_val)) / current_acc_ave_;
 
 				double curr_space, front_space;
-				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0, -0.325, 0, 1.0, 1.0, 0, curr_space, front_space);
+				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0,
+					car_target_deceleration, front_target_deceleration,
+					cur_delay_time, front_delay_time,
+					min_free_running_distance, curr_space, front_space);
+				pubmsg.curr_vel_ave = current_vel_ave_;
 				break;
 			}
 			else if(waypoint_param.temporary_stop_line > 0 && temporary_flag_ == 1)
@@ -171,7 +193,12 @@ private:
 				else pubmsg.reach_time = (-current_vel_ave_ + std::sqrt(sqrt_val)) / current_acc_ave_;
 
 				double curr_space, front_space;
-				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, temporary_fixed_velocity_, -0.325, 0, 1.0, 1.0, 0, curr_space, front_space);
+				std::cout << "vel," << current_vel_ave_ << "," << temporary_fixed_velocity_ << "," << targetFreeSpaceRSS(current_vel_ave_, temporary_fixed_velocity_, 0.14, 10, 1.0, 1.0, 0, curr_space, front_space) << std::endl;
+				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, temporary_fixed_velocity_,
+					car_target_deceleration, front_target_deceleration,
+					cur_delay_time, front_delay_time,
+					min_free_running_distance,  curr_space, front_space);
+				pubmsg.curr_vel_ave = current_vel_ave_;
 				break;
 			}
 			else if(waypoint_param.oncoming_stop_line > 0 && oncoming_stop_ == true)
@@ -186,7 +213,11 @@ private:
 				else pubmsg.reach_time = (-current_vel_ave_ + std::sqrt(sqrt_val)) / current_acc_ave_;
 
 				double curr_space, front_space;
-				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0, -0.325, 0, 1.0, 1.0, 0, curr_space, front_space);
+				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0,
+					car_target_deceleration, front_target_deceleration,
+					cur_delay_time, front_delay_time,
+					min_free_running_distance, curr_space, front_space);
+				pubmsg.curr_vel_ave = current_vel_ave_;
 				break;
 			}
 			else if(obstacle_waypoint_ > 0 && obstacle_waypoint_ == i)
@@ -213,7 +244,11 @@ private:
 				else pubmsg.reach_time = (-current_vel_ave_ + std::sqrt(sqrt_val)) / current_acc_ave_;
 
 				double curr_space, front_space;
-				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0, -0.325, 0, 1.0, 1.0, 0, curr_space, front_space);
+				pubmsg.distance_rss = targetFreeSpaceRSS(current_vel_ave_, 0,
+					car_target_deceleration, front_target_deceleration,
+					cur_delay_time, front_delay_time,
+					min_free_running_distance, curr_space, front_space);
+				pubmsg.curr_vel_ave = current_vel_ave_;
 				break;
 			}
 		}
@@ -255,7 +290,7 @@ private:
 			for(int i=0; i<current_velocity_list.size(); i++)
 			{
 				double curr_v = current_velocity_list[i];
-				current_vel_ave_ = curr_v;
+				current_vel_ave_ += curr_v;
 				if(i != 0)
 				{
 					double prev_v = current_velocity_list[i-1];

@@ -10,3 +10,4 @@ uint8 send_process #停止線の種類　上の定数を意味する
 float64 fixed_velocity #停止線に設定されている速度
 float64 reach_time #停止線までの到達時間
 float64 distance_rss
+float64 curr_vel_ave

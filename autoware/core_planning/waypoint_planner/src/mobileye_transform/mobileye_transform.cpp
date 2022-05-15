@@ -34,6 +34,8 @@ private:
 		//std::cout << msg->obstacle_id << "," << msg->header.stamp.nsec << std::endl;
 		try
 		{
+			if(msg->obstacle_status == 4) return;//対向車判定の車両は省く
+
 			ros::Time rosnowtime = ros::Time::now();
 			//double nowtime = rosnowtime.sec + rosnowtime.nsec * 1E-9;
 			//std::cout << std::fixed << std::setprecision(12) << nowtime << std::endl;

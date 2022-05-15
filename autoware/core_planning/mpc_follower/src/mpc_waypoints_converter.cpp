@@ -148,7 +148,7 @@ private:
     }
 
     std_msgs::Float64 twist_gate_vel;
-    twist_gate_vel.data = cur_vel_ave;
+    twist_gate_vel.data = final_waypoints.waypoints[0].twist.twist.linear.x;//cur_vel_ave;
     pub_twist_gate_vel_.publish(twist_gate_vel);
     pub_mpc_waypoints_.publish(mpc_waypoints);
   }

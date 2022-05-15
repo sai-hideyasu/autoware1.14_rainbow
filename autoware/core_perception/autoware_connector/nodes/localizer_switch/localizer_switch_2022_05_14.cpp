@@ -20,8 +20,8 @@
 const int max_localizer_count = 2;
 const int SYNC_FRAMES = 10;
 
-typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, geometry_msgs::TwistStamped>
-	NdtlocalizerSync1;
+typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, geometry_msgs::TwistStamped, geometry_msgs::PoseStamped, autoware_msgs::NDTStat>
+	NdtlocalizerSync;
 
 typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::PoseStamped, geometry_msgs::TwistStamped, geometry_msgs::PoseStamped, autoware_msgs::GnssStandardDeviation>
 	RTKlocalizerSync;
@@ -44,10 +44,9 @@ private:
 	message_filters::Subscriber<geometry_msgs::PoseStamped>             *base_link_pose_sub_;
 	message_filters::Subscriber<geometry_msgs::TwistStamped>            *estimate_twist_sub_;
 	message_filters::Subscriber<geometry_msgs::PoseStamped>             *localizer_pose_sub_;
-	ros::Subscriber ndt_pose_sub_, ndt_twist_sub_, ndt_localizer_sub_;
-
+	message_filters::Subscriber<autoware_msgs::NDTStat>                 *ndt_status_sub_;
 	message_filters::Subscriber<autoware_msgs::GnssStandardDeviation> *gnss_deviation_sub_;
-	message_filters::Synchronizer<NdtlocalizerSync1> *sync_ndt1_;
+	message_filters::Synchronizer<NdtlocalizerSync> *sync_ndt_;
 	message_filters::Synchronizer<RTKlocalizerSync> *sync_RTK_;
 	message_filters::Synchronizer<VelocitylocalizerSync> *sync_velocity_;
 
@@ -66,13 +65,7 @@ private:
 	//fusion select flag
 	int fusion_select_;
 	//yaw_correction
-	double yaw_correction_;
-
-	//ndt_localizer topic
-	geometry_msgs::TwistStamped ndt_twist_;
-	geometry_msgs::PoseStamped ndt_localizer_;
-	//readed ndt_localizer topic
-	bool readed_ndt_localizer_;
+	double yaw_correction_deg_;
 
 	//baselink data
 	geometry_msgs::PoseStamped baselink_;
@@ -81,54 +74,56 @@ private:
 	//localizer data
 	geometry_msgs::PoseStamped localizer_;
 
-	void posedata_write(const geometry_msgs::PoseStamped &base_link_pose_msg,
-						const geometry_msgs::TwistStamped &estimate_twist_msg,
-						const geometry_msgs::PoseStamped &localizer_pose_msg)
+	void posedata_write(const geometry_msgs::PoseStampedConstPtr &base_link_pose_msg,
+						const geometry_msgs::TwistStampedConstPtr &estimate_twist_msg,
+						const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg)
 	{
 		tf::Quaternion pose_orien;
-		tf::quaternionMsgToTF(base_link_pose_msg.pose.orientation, pose_orien);
-		std::cout << "yaw col : " << yaw_correction_ << std::endl;
-		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
+		tf::quaternionMsgToTF(base_link_pose_msg->pose.orientation, pose_orien);
+		std::cout << "yaw col : " << yaw_correction_deg_ << std::endl;
+		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_deg_ * M_PI /180.0);
 		tf::Quaternion math_orie = pose_orien * hosei;
 
-		baselink_.header.frame_id = base_link_pose_msg.header.frame_id;
-		baselink_.header.stamp = base_link_pose_msg.header.stamp;
-		baselink_.header.seq = base_link_pose_msg.header.seq;
-		baselink_.pose.position.x = base_link_pose_msg.pose.position.x;
-		baselink_.pose.position.y = base_link_pose_msg.pose.position.y;
-		baselink_.pose.position.z = base_link_pose_msg.pose.position.z;
+		baselink_.header.frame_id = base_link_pose_msg->header.frame_id;
+		baselink_.header.stamp = base_link_pose_msg->header.stamp;
+		baselink_.header.seq = base_link_pose_msg->header.seq;
+		baselink_.pose.position.x = base_link_pose_msg->pose.position.x;
+		baselink_.pose.position.y = base_link_pose_msg->pose.position.y;
+		baselink_.pose.position.z = base_link_pose_msg->pose.position.z;
 		baselink_.pose.orientation.x = math_orie.getX();//base_link_pose_msg->pose.orientation.x;
 		baselink_.pose.orientation.y = math_orie.getY();//base_link_pose_msg->pose.orientation.y;
 		baselink_.pose.orientation.z = math_orie.getZ();//base_link_pose_msg->pose.orientation.z;
 		baselink_.pose.orientation.w = math_orie.getW();//base_link_pose_msg->pose.orientation.w;
 
-		twist_.header.frame_id = estimate_twist_msg.header.frame_id;
-		twist_.header.stamp = estimate_twist_msg.header.stamp;
-		twist_.header.seq = estimate_twist_msg.header.seq;
-		twist_.twist.linear.x = estimate_twist_msg.twist.linear.x;
-		twist_.twist.linear.y = estimate_twist_msg.twist.linear.y;
-		twist_.twist.linear.z = estimate_twist_msg.twist.linear.z;
-		twist_.twist.angular.x = estimate_twist_msg.twist.angular.x;
-		twist_.twist.angular.y = estimate_twist_msg.twist.angular.y;
-		twist_.twist.angular.z = estimate_twist_msg.twist.angular.z;
+		twist_.header.frame_id = estimate_twist_msg->header.frame_id;
+		twist_.header.stamp = estimate_twist_msg->header.stamp;
+		twist_.header.seq = estimate_twist_msg->header.seq;
+		twist_.twist.linear.x = estimate_twist_msg->twist.linear.x;
+		twist_.twist.linear.y = estimate_twist_msg->twist.linear.y;
+		twist_.twist.linear.z = estimate_twist_msg->twist.linear.z;
+		twist_.twist.angular.x = estimate_twist_msg->twist.angular.x;
+		twist_.twist.angular.y = estimate_twist_msg->twist.angular.y;
+		twist_.twist.angular.z = estimate_twist_msg->twist.angular.z;
 
-		localizer_.header.frame_id = localizer_pose_msg.header.frame_id;
-		localizer_.header.stamp = localizer_pose_msg.header.stamp;
-		localizer_.header.seq = localizer_pose_msg.header.seq;
-		localizer_.pose.position.x = localizer_pose_msg.pose.position.x;
-		localizer_.pose.position.y = localizer_pose_msg.pose.position.y;
-		localizer_.pose.position.z = localizer_pose_msg.pose.position.z;
-		localizer_.pose.orientation.x = localizer_pose_msg.pose.orientation.x;
-		localizer_.pose.orientation.y = localizer_pose_msg.pose.orientation.y;
-		localizer_.pose.orientation.z = localizer_pose_msg.pose.orientation.z;
-		localizer_.pose.orientation.w = localizer_pose_msg.pose.orientation.w;
+		localizer_.header.frame_id = localizer_pose_msg->header.frame_id;
+		localizer_.header.stamp = localizer_pose_msg->header.stamp;
+		localizer_.header.seq = localizer_pose_msg->header.seq;
+		localizer_.pose.position.x = localizer_pose_msg->pose.position.x;
+		localizer_.pose.position.y = localizer_pose_msg->pose.position.y;
+		localizer_.pose.position.z = localizer_pose_msg->pose.position.z;
+		localizer_.pose.orientation.x = localizer_pose_msg->pose.orientation.x;
+		localizer_.pose.orientation.y = localizer_pose_msg->pose.orientation.y;
+		localizer_.pose.orientation.z = localizer_pose_msg->pose.orientation.z;
+		localizer_.pose.orientation.w = localizer_pose_msg->pose.orientation.w;
 	}
 
-	void NdtPoseCallback(const geometry_msgs::PoseStamped::ConstPtr &msg)
+	void NdtlocalizerCallback(const geometry_msgs::PoseStampedConstPtr &base_link_pose_msg,
+									const geometry_msgs::TwistStampedConstPtr &estimate_twist_msg,
+									const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg,
+									const autoware_msgs::NDTStatConstPtr &ndt_stConstPtratus_msg)
 	{
-		if(readed_ndt_localizer_ == false) return;
 		//std::cout << "aaa\n" << std::flush;
-		posedata_write(*msg, ndt_twist_, ndt_localizer_);
+		posedata_write(base_link_pose_msg, estimate_twist_msg, localizer_pose_msg);
 
 		switch(fusion_select_)
 		{
@@ -138,34 +133,6 @@ private:
 				break;
 			}
 		}
-	}
-
-	void NdtTwistCallback(const geometry_msgs::TwistStamped::ConstPtr &msg)
-	{
-		ndt_twist_ = *msg;
-	}
-
-	void NdtlocalizerCallback1(const geometry_msgs::PoseStampedConstPtr &base_link_pose_msg,
-									const geometry_msgs::TwistStampedConstPtr &estimate_twist_msg)//const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg,const autoware_msgs::NDTStatConstPtr &ndt_stConstPtratus_msg)
-	{
-		if(readed_ndt_localizer_ == false) return;
-		//std::cout << "aaa\n" << std::flush;
-		posedata_write(*base_link_pose_msg, *estimate_twist_msg, ndt_localizer_);
-
-		switch(fusion_select_)
-		{
-		case 1:
-			{
-				pose_topic_publish();
-				break;
-			}
-		}
-	}
-
-	void NdtlocalizerCallback2(const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg)
-	{
-		ndt_localizer_ = *localizer_pose_msg;
-		readed_ndt_localizer_ = true;
 	}
 
 	void RTKlocalizerCallback(const geometry_msgs::PoseStampedConstPtr &base_link_pose_msg,
@@ -174,7 +141,7 @@ private:
 									const autoware_msgs::GnssStandardDeviationConstPtr &gnss_deviation_msg)
 	{
 		//std::cout << "bbb\n" << std::flush;
-		posedata_write(*base_link_pose_msg, *estimate_twist_msg, *localizer_pose_msg);
+		posedata_write(base_link_pose_msg, estimate_twist_msg, localizer_pose_msg);
 
 		switch(fusion_select_)
 		{
@@ -190,7 +157,7 @@ private:
 									const geometry_msgs::TwistStampedConstPtr &estimate_twist_msg,
 									const geometry_msgs::PoseStampedConstPtr &localizer_pose_msg)
 	{
-		posedata_write(*base_link_pose_msg, *estimate_twist_msg, *localizer_pose_msg);
+		posedata_write(base_link_pose_msg, estimate_twist_msg, localizer_pose_msg);
 		switch(fusion_select_)
 		{
 		case 1:
@@ -207,7 +174,6 @@ public:
 		: nh_(nh)
 		, private_nh_(private_nh)
 		, fusion_select_(-1)
-		, readed_ndt_localizer_(false)
 	{
 		static int classID_counter = 0;
 		classID = classID_counter;   classID_counter++;
@@ -232,23 +198,21 @@ public:
 	void callback_run()
 	{
 		// subscriber
+		base_link_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, base_link_pose_topic_, 10);
+		estimate_twist_sub_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, estimate_twist_topic_, 10);
+		localizer_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, localizer_pose_topic_, 10);
 		switch(approach_)
 		{
 		case 0://ndt
 			{
-				/*sync_ndt1_ = new message_filters::Synchronizer<NdtlocalizerSync1>(NdtlocalizerSync1(SYNC_FRAMES),
-								  *base_link_pose_sub_, *estimate_twist_sub_);//, *localizer_pose_sub_, *ndt_status_sub_);
-				sync_ndt1_->registerCallback(boost::bind(&TopicList::NdtlocalizerCallback1, this, _1, _2));*/
-				ndt_pose_sub_ = nh_.subscribe(base_link_pose_topic_, 10, &TopicList::NdtPoseCallback, this);
-				ndt_twist_sub_ = nh_.subscribe(estimate_twist_topic_, 10, &TopicList::NdtTwistCallback, this);
-				ndt_localizer_sub_ = nh_.subscribe(localizer_pose_topic_, 10, &TopicList::NdtlocalizerCallback2, this);
+				ndt_status_sub_ = new message_filters::Subscriber<autoware_msgs::NDTStat>(nh_, ndt_status_topic_, 10);
+				sync_ndt_ = new message_filters::Synchronizer<NdtlocalizerSync>(NdtlocalizerSync(SYNC_FRAMES),
+								  *base_link_pose_sub_, *estimate_twist_sub_, *localizer_pose_sub_, *ndt_status_sub_);
+				sync_ndt_->registerCallback(boost::bind(&TopicList::NdtlocalizerCallback, this, _1, _2, _3, _4));
 				break;
 			}
 		case 1://gnss(RTK)
 			{
-				base_link_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, base_link_pose_topic_, 10);
-				estimate_twist_sub_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, estimate_twist_topic_, 10);
-				localizer_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, localizer_pose_topic_, 10);
 				gnss_deviation_sub_ = new message_filters::Subscriber<autoware_msgs::GnssStandardDeviation>(nh_, gnss_deviation_topic_, 10);
 				sync_RTK_ = new message_filters::Synchronizer<RTKlocalizerSync>(RTKlocalizerSync(SYNC_FRAMES),
 								  *base_link_pose_sub_, *estimate_twist_sub_, *localizer_pose_sub_, *gnss_deviation_sub_);
@@ -257,9 +221,6 @@ public:
 			}
 		case 2:
 			{
-				base_link_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, base_link_pose_topic_, 10);
-				estimate_twist_sub_ = new message_filters::Subscriber<geometry_msgs::TwistStamped>(nh_, estimate_twist_topic_, 10);
-				localizer_pose_sub_ = new message_filters::Subscriber<geometry_msgs::PoseStamped>(nh_, localizer_pose_topic_, 10);
 				//gnss_deviation_sub_ = new message_filters::Subscriber<autoware_msgs::GnssStandardDeviation>(nh_, gnss_deviation_topic_, 10);
 				sync_velocity_ = new message_filters::Synchronizer<VelocitylocalizerSync>(VelocitylocalizerSync(SYNC_FRAMES),
 								  *base_link_pose_sub_, *estimate_twist_sub_, *localizer_pose_sub_);
@@ -286,11 +247,8 @@ public:
 
 		tf::StampedTransform tf_stamped;
 		ros::Time time = ros::Time::now();
-		bool flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
-		ros::Time next_time = ros::Time::now();
-		ros::Duration ros_time_diff = next_time - time;
-		double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
-		std::cout << "time_diff:" << time_diff << std::endl;
+		bool flag;std::cout << "aaa" << std::endl;
+		flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
 		if(flag == true) std::cout << "bbb\n" << std::flush;
 		else 
 		{
@@ -310,7 +268,7 @@ public:
 		//if(flag == false) std::cout << "bbb\n";
 		std::cout << "ccc" << std::endl;
 		tf::Quaternion qua = tf_stamped.getRotation();
-		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
+		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_deg_ * M_PI /180.0);
 		tf_stamped.setRotation(qua * hosei);
 		trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
 		std::cout << "ddd" << std::endl;
@@ -349,9 +307,9 @@ public:
 		fusion_select_ = select;
 	}
 
-	void set_yaw_correction(double val)
+	void set_yaw_correction_deg(double val)
 	{
-		yaw_correction_ = val;
+		yaw_correction_deg_ = val;
 	}
 };
 
@@ -518,8 +476,8 @@ private:
 		std::cout << "yaw_correction1 : " << msg->yaw_correction1 << std::endl;
 		localizer_select(msg->fusion_select);
 
-		topic_list_[0].set_yaw_correction(msg->yaw_correction1);
-		topic_list_[1].set_yaw_correction(msg->yaw_correction2);
+		topic_list_[0].set_yaw_correction_deg(msg->yaw_correction1);
+		topic_list_[1].set_yaw_correction_deg(msg->yaw_correction2);
 		config_ = *msg;
 	}
 
@@ -527,11 +485,11 @@ private:
 	{
 		if(msg->ls_ndt_yaw_correction_deg >= -10 && msg->ls_ndt_yaw_correction_deg <= 10)
 		{
-			topic_list_[0].set_yaw_correction(msg->ls_ndt_yaw_correction_deg);
+			topic_list_[0].set_yaw_correction_deg(msg->ls_ndt_yaw_correction_deg);
 		}
 		if(msg->ls_gnss_yaw_correction_deg >= -10 && msg->ls_gnss_yaw_correction_deg <= 10)
 		{
-			topic_list_[1].set_yaw_correction(msg->ls_gnss_yaw_correction_deg);
+			topic_list_[1].set_yaw_correction_deg(msg->ls_gnss_yaw_correction_deg);
 		}
 
 		localizer_select(msg->fusion_select);
@@ -640,13 +598,13 @@ int main(int argc, char** argv)
 
 
 	LocalizerSwitch localizer_switch(nh, private_nh, topicListArray, localizer_select);
-	/*ros::Rate rate(100);
+	ros::Rate rate(100);
 	while(ros::ok())
 	{
 		ros::spinOnce();
 		rate.sleep();
-	}*/
-	ros::spin();
+	}
+
 	delete tf_listener;
 	return 0;
 }

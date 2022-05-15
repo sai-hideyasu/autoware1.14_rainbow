@@ -33,6 +33,7 @@
 #include <autoware_can_msgs/MicroBusCan503.h>
 #include <autoware_msgs/LocalizerMatchStat.h>
 #include <autoware_can_msgs/MicroBusCanSenderStatus.h>
+#include <autoware_config_msgs/ConfigVoxelGridFilter.h>
 #include <autoware_msgs/DifferenceToWaypointDistance.h>
 #include <autoware_config_msgs/ConfigMicroBusCan.h>
 #include <autoware_can_msgs/MicroBusCanVelocityParam.h>
@@ -130,7 +131,7 @@ private:
 	ros::Subscriber sub_can501_, sub_can502_, sub_can503_;//マイクロバスcanのID501,502
 	ros::Subscriber sub_can_status_;//canステータス情報 
 	ros::Subscriber sub_distance_angular_check_, sub_distance_angular_check_ndt_, sub_distance_angular_check_ekf_, sub_distance_angular_check_gnss_;//経路と自車位置のチェック用
-	ros::Subscriber sub_config_;
+	ros::Subscriber sub_config_, sub_config_voxel_grid_filter_;
 	ros::Subscriber sub_localizer_select_;//localizerの遷移状態 
 	ros::Subscriber sub_localizer_match_stat_;//localizerのマッチング状態
 	ros::Subscriber sub_can_velocity_param_;//canの速度情報
@@ -207,6 +208,8 @@ private:
 	void callbackFrontMobileye(const autoware_msgs::TransformMobileyeObstacle::ConstPtr &msg);
 	void callbackMobileyeCmdParam(const autoware_msgs::MobileyeCmdParam::ConstPtr &msg);
 	void callbackTrackingType(const std_msgs::String::ConstPtr &msg);
+	void callbackVoxelGirdFilter(const autoware_config_msgs::ConfigVoxelGridFilter::ConstPtr& msg);
+
 	//void runWaypointsNode(std::string branch);
 
 	autoware_can_msgs::MicroBusCan501 can501_;//マイコン応答ID501
@@ -260,6 +263,7 @@ private:
 	autoware_msgs::TransformMobileyeObstacle mobileye_front_car_;//mobileyeの前方車両情報
 	autoware_msgs::MobileyeCmdParam mobileye_cmd_param_;//mobileye_trackerノードからpublishされる追跡用情報
 	std::string tracking_type_;////前方車両追跡時の追従方法
+	autoware_config_msgs::ConfigVoxelGridFilter config_voxel_grid_filter_;//points_rawのダウンサンプル設定
 
 	//タイマー
 	ros::Time timer_error_lock_;
@@ -311,27 +315,17 @@ private:
 
 	std::vector<QString> select_launch_text_ = {"渋沢巡回", "岡部便", "茂木実証","埼玉工業大学ロータリー", "幕張実証"};
 	std::vector<std::string> select_launch_file_ = {"00A", "daigaku_go", "motegi_1_mitinoeki_motegieki","daigaku_rotari", "makuhari_1_iron_zozo"};
-	/*std::vector<std::vector<std::string>> select_launch_ = {
-		{"1-00A","1-01A","1-02A","1-03A","1-04A","1-05A","1-06B","1-02A","1-03A","1-04A","1-05A","1-06A","1-07A","1-08A","1-09A","1-10A",
-		 "2-00A","2-01A","2-02A","2-03A","2-04A","2-05A","2-06A","2-07A","2-08A","2-09A","2-10A",
-		 "3-00A","3-01A","3-02A","3-03A","3-04A","3-05A","3-06B","3-02A","3-03A","3-04A","3-05A","3-06A","3-07A","3-08A","3-09A","3-10A",
-		 "4-00A","4-01A","4-02A","4-03A","4-04A","4-05A","4-06B","4-02A","4-03A","4-04A","4-05A","4-06A","4-07A","4-08A","4-09A","4-10A",
-		 "5-00A","5-01A","5-02A","5-03A","5-04A","5-05A","5-06B","5-02A","5-03A","5-04A","5-05A","5-06A","5-07A","5-08A","5-09A","5-10A",
-		 "6-00A","6-01A","6-02A","6-03A","6-04A","6-05A","6-06B","6-02A","6-03A","6-04A","6-05A","6-06A","6-07A","6-08A","6-09A","6-10A",
-		 "7-00A","7-01A","7-02A","7-03A","7-04A","7-05A","7-06A","7-07A","7-08A","7-09A","7-10A"},
-		{"aa"},
-		{"bbb"}
-	};*/
 
 	//wrote by minamidani
 	std::vector<std::vector<std::string>> select_launch_ = {
-		{"1-00A","1-01A","1-02A","1-03A","1-04A","1-05A","1-06B","1-02A","1-03A","1-04A","1-05A","1-06A","1-07A","1-08A","1-09A","1-10A",
+		/*{"1-00A","1-01A","1-02A","1-03A","1-04A","1-05A","1-06B","1-02A","1-03A","1-04A","1-05A","1-06A","1-07A","1-08A","1-09A","1-10A",
 		 "2-00A","2-01A","2-02A","2-03A","2-04A","2-05A","2-06A","2-07A","2-08A","2-09A","2-10A",
 		 "3-00A","3-01A","3-02A","3-03A","3-04A","3-05A","3-06B","3-02A","3-03A","3-04A","3-05A","3-06A","3-07A","3-08A","3-09A","3-10A",
 		 "4-00A","4-01A","4-02A","4-03A","4-04A","4-05A","4-06B","4-02A","4-03A","4-04A","4-05A","4-06A","4-07A","4-08A","4-09A","4-10A",
 		 "5-00A","5-01A","5-02A","5-03A","5-04A","5-05A","5-06A","5-07A","5-08A","5-09A","5-10A",
 		 "6-00A","6-01A","6-02A","6-03A","6-04A","6-05A","6-06B","6-02A","6-03A","6-04A","6-05A","6-06A","6-07A","6-08A","6-09A","6-10A",
-		 "7-00A","7-01A","7-02A","7-03A","7-04A","7-05A","7-06B","7-02A","7-03A","7-04A","7-05A","7-06A","7-07A","7-08A","7-09A","7-10A"},
+		 "7-00A","7-01A","7-02A","7-03A","7-04A","7-05A","7-06B","7-02A","7-03A","7-04A","7-05A","7-06A","7-07A","7-08A","7-09A","7-10A"},*/
+		{"1-00A","1-01A","1-02A","1-03A","1-04A","1-05A","1-06B","1-02A","1-03A","1-04A","1-05A","1-06A"},
 		{"1-daigaku_go","1-daigaku_return"},
 		{"1-bbb"},
 		{"1-daigaku_rotari"},
@@ -343,13 +337,15 @@ private:
 	};
 
 	std::vector<LaneName> lane_name_ = {
-		{"00A", "仲町バス発着所", "大河ドラマ館"},
+		//{"00A", "仲町バス発着所", "大河ドラマ館"},
+		{"00A", "深谷駅", "大河ドラマ館"},
 		{"01A", "大河ドラマ館", "北部運動公園"},
 		{"02A", "北部運動公園", "尾高惇忠生家"},
 		{"03A", "尾高惇忠生家", "渋沢栄一記念館"},
 		{"04A", "渋沢栄一記念館", "中の家"},
 		{"05A", "中の家", "道の駅おかべ"},
-		{"06A", "道の駅おかべ", "岡部公会堂"},
+		//{"06A", "道の駅おかべ", "岡部公会堂"},
+		{"06A", "道の駅おかべ", "深谷駅"},
 		{"06B", "道の駅おかべ", "北部運動公園"},
 		{"07A", "岡部公会堂", "西常夜灯"},
 		{"08A", "西常夜灯", "七ツ梅"},

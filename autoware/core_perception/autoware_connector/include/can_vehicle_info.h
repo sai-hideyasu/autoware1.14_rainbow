@@ -22,8 +22,8 @@ namespace autoware_connector
 
 const double handle_angle_right_max = 730;
 const double handle_angle_left_max = 765;
-const double wheelrad_to_steering_can_value_left = 20935.4958411006;//20639.7444769791;//20935.4958411006;//20691.8161699557;//20952.8189547718;
-const double wheelrad_to_steering_can_value_right = 20791.4464661611;//20066.8329952857;//20791.4464661611;//20802.5331916036;//20961.415734248;
+const double wheelrad_to_steering_can_value_left = 25009.6727514125;//20935.4958411006;
+const double wheelrad_to_steering_can_value_right = 26765.9140133745;//20791.4464661611;
 const double wheelrad_to_steering_can_value_left_intercept = 0;//277.358467233321;
 const double wheelrad_to_steering_can_value_right_intercept = 0;//111.715455085083;
 const double angle_velocity_correction_slope_ = -0.0150859385;

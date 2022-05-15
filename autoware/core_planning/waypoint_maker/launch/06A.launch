@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="load_csv" default="true" />
-  <arg name="multi_lane_csv" default="/home/sit/load_data/sibusawa/rainbow/6A-mitinoeki-koukaidou/2021_11_10_add_signal.csv" />
+  <arg name="multi_lane_csv" default="/home/sit/load_data/sibusawa/rainbow/mobileye/mitinoeki_fukayaeki_2022_05_02_massugu3.csv" />
   <arg name="replanning_mode" default="False" />
   <arg name="realtime_tuning_mode" default="False" />
   <arg name="resample_mode" default="True" />
@@ -32,7 +32,7 @@
   <!--node pkg="rostopic" type="rostopic" name="load_name" args="pub /load_name std_msgs/String 道の駅おかべ,岡部公会堂"/-->
   <node pkg="rostopic" type="rostopic" name="load_name" args="pub /load_name autoware_msgs/WaypointsSerialNumLaunch 
     '{route_current: '道の駅おかべ',
-      route_next: '岡部公会堂',
+      route_next: '深谷駅',
       toAnext: '07A',
       toAback: '05A',
       toBnext: '',
