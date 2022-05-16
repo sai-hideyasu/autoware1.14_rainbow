@@ -153,8 +153,9 @@ void EKFLocalizer::showCurrentX()
  */
 void EKFLocalizer::setCurrentResult()
 {
+  ros::Time nowtime = ros::Time::now(); 
   current_ekf_pose_.header.frame_id = pose_frame_id_;
-  current_ekf_pose_.header.stamp = ros::Time::now();
+  current_ekf_pose_.header.stamp = nowtime;
   current_ekf_pose_.pose.position.x = ekf_.getXelement(IDX::X);
   current_ekf_pose_.pose.position.y = ekf_.getXelement(IDX::Y);
 
@@ -177,7 +178,7 @@ void EKFLocalizer::setCurrentResult()
   tf2::convert(q_tf, current_ekf_pose_.pose.orientation);
 
   current_ekf_twist_.header.frame_id = "ndt_base_link";
-  current_ekf_twist_.header.stamp = ros::Time::now();
+  current_ekf_twist_.header.stamp = nowtime;
   current_ekf_twist_.twist.linear.x = ekf_.getXelement(IDX::VX);
   current_ekf_twist_.twist.angular.z = ekf_.getXelement(IDX::WZ);
 }
@@ -191,7 +192,7 @@ void EKFLocalizer::timerTFCallback(const ros::TimerEvent& e)
     return;
 
   geometry_msgs::TransformStamped transformStamped;
-  transformStamped.header.stamp = ros::Time::now();
+  transformStamped.header.stamp = current_ekf_pose_.header.stamp;
   transformStamped.header.frame_id = current_ekf_pose_.header.frame_id;
   transformStamped.child_frame_id = "ekf_pose";
   transformStamped.transform.translation.x = current_ekf_pose_.pose.position.x;

@@ -284,37 +284,6 @@ public:
 		base_link_pose_msg.pose.orientation.z = baselink_.pose.orientation.z;
 		base_link_pose_msg.pose.orientation.w = baselink_.pose.orientation.w;
 
-		tf::StampedTransform tf_stamped;
-		ros::Time time = ros::Time::now();
-		bool flag = tf_listener->waitForTransform("map", twist_.header.frame_id, twist_.header.stamp, ros::Duration(3.0));
-		ros::Time next_time = ros::Time::now();
-		ros::Duration ros_time_diff = next_time - time;
-		double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
-		std::cout << "time_diff:" << time_diff << std::endl;
-		if(flag == true) std::cout << "bbb\n" << std::flush;
-		else 
-		{
-			return;
-			std::cout << "ccc\n" << std::flush;
-		}
-		std::cout << twist_.header.frame_id << std::endl;
-		try
-		{
-			tf_listener->lookupTransform("map", twist_.header.frame_id, twist_.header.stamp, tf_stamped);
-		}
-		catch(const tf::TransformException& e)
-		{
-			std::cerr << "lookup error : " << e.what() << std::endl;
-			return;
-		}
-		//if(flag == false) std::cout << "bbb\n";
-		std::cout << "ccc" << std::endl;
-		tf::Quaternion qua = tf_stamped.getRotation();
-		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
-		tf_stamped.setRotation(qua * hosei);
-		trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
-		std::cout << "ddd" << std::endl;
-
 		geometry_msgs::TwistStamped twist_pose_msg;
 		twist_pose_msg.header.frame_id = "base_link";
 		twist_pose_msg.header.stamp = twist_.header.stamp;
@@ -342,6 +311,37 @@ public:
 		pub_current_pose_.publish(baselink_);
 		pub_twist_pose_.publish(twist_pose_msg);
 		pub_localizer_pose_.publish(localizer_);
+
+		tf::StampedTransform tf_stamped;
+		ros::Time time = ros::Time::now();
+		bool flag = tf_listener->waitForTransform("map", twist_.header.frame_id, base_link_pose_msg.header.stamp, ros::Duration(3.0));
+		ros::Time next_time = ros::Time::now();
+		ros::Duration ros_time_diff = next_time - time;
+		double time_diff = ros_time_diff.sec + ros_time_diff.nsec * 1E-9;
+		std::cout << "time_diff:" << time_diff << std::endl;
+		if(flag == true) std::cout << "bbb\n" << std::flush;
+		else 
+		{
+			return;
+			std::cout << "ccc\n" << std::flush;
+		}
+		std::cout << twist_.header.frame_id << std::endl;
+		try
+		{
+			tf_listener->lookupTransform("map", twist_.header.frame_id, twist_.header.stamp, tf_stamped);
+		}
+		catch(const tf::TransformException& e)
+		{
+			std::cerr << "lookup error : " << e.what() << std::endl;
+			return;
+		}
+		//if(flag == false) std::cout << "bbb\n";
+		std::cout << "ccc" << std::endl;
+		tf::Quaternion qua = tf_stamped.getRotation();
+		tf::Quaternion hosei = tf::createQuaternionFromYaw(yaw_correction_ * M_PI /180.0);
+		tf_stamped.setRotation(qua * hosei);
+		trans_broad.sendTransform(tf::StampedTransform(tf_stamped, twist_.header.stamp, "/map", "/base_link"));
+		std::cout << "ddd" << std::endl;
 	}
 
 	void set_fusion_select(int select)
